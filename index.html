@@ -129,6 +129,13 @@ body{
   display:inline-block;font-size:10px;background:var(--sub);color:#fff;
   border-radius:3px;padding:0 5px;margin-left:6px;vertical-align:middle;
 }
+.sub.user-note .note-del{
+  display:inline-block;margin-left:8px;width:18px;height:18px;line-height:16px;
+  text-align:center;font-size:14px;color:#b0a898;cursor:pointer;
+  border-radius:50%;vertical-align:middle;transition:all .15s;
+}
+.sub.user-note .note-del:hover{background:#e8d5c4;color:#c0392b;}
+.sub.user-note{position:relative;}
 /* note selecting mode: answer titles become clickable */
 body.note-selecting .answer-title{
   cursor:pointer;
@@ -408,7 +415,7 @@ let userData = { notes: {}, blankKeywords: [] };
 try {
   const raw = localStorage.getItem(USERDATA_KEY);
   if(raw){
-    const parsed = JSON.parse(raw);
+    const parsed = JSON.parse(sanitizeJsonText(raw));
     if(parsed && typeof parsed === 'object'){
       userData.notes = (parsed.notes && typeof parsed.notes === 'object') ? parsed.notes : {};
       userData.blankKeywords = Array.isArray(parsed.blankKeywords) ? parsed.blankKeywords.filter(w=>typeof w==='string'&&w.trim()) : [];
@@ -716,7 +723,9 @@ function renderChapter(bi,ci){
         if(note.answerIdx!==ai) return;
         noteSubNum++;
         html+='<div class="sub user-note">';
-        html+='<div class="sub-title">（'+numToCn(noteSubNum)+'）'+applyBlanks(note.title)+'<span class="note-tag">补</span></div>';
+        html+='<div class="sub-title">（'+numToCn(noteSubNum)+'）'+applyBlanks(note.title)+'<span class="note-tag">补</span>';
+        if(note.nid) html+='<span class="note-del" data-kpkey="'+kpKey+'" data-nid="'+note.nid+'" title="删除这条笔记">×</span>';
+        html+='</div>';
         if(note.points&&note.points.length){
           html+='<ul class="points">';
           note.points.forEach((pt,idx)=>{
@@ -1088,11 +1097,19 @@ document.getElementById('doImportBtn').addEventListener('click',()=>{
   const raw=importText.value.trim();
   if(!raw){importResult.textContent='请先粘贴JSON';importResult.style.color='#c0392b';return;}
   let pkg;
-  try{ pkg=JSON.parse(raw); }
-  catch(e){ importResult.textContent='JSON格式错误，无法导入';importResult.style.color='#c0392b';return; }
+  try{ pkg=JSON.parse(sanitizeJsonText(raw)); }
+  catch(e){
+    if(e.message&&e.message.indexOf('control character')>=0){
+      importResult.textContent='笔记内容包含非法换行/特殊字符，请检查笔记内容';
+    } else {
+      importResult.textContent='JSON格式错误，无法导入（可能版本不匹配）';
+    }
+    importResult.style.color='#c0392b';return;
+  }
 
   // accept both wrapped ({data:{...}}) and raw userData
-  const incoming=(pkg&&pkg.data&&typeof pkg.data==='object')?pkg.data:pkg;
+  var incoming=(pkg&&pkg.data&&typeof pkg.data==='object')?pkg.data:pkg;
+  incoming=restoreControlChars(incoming);
   if(!incoming||typeof incoming!=='object'||Array.isArray(incoming)){
     importResult.textContent='数据格式不对，请确认是导出的备份文件';importResult.style.color='#c0392b';return;
   }
@@ -1107,7 +1124,10 @@ document.getElementById('doImportBtn').addEventListener('click',()=>{
         if(!userData.notes[kpKey]) userData.notes[kpKey]=[];
         arr.forEach(note=>{
           if(note&&typeof note==='object'&&typeof note.title==='string'&&Array.isArray(note.points)){
-            userData.notes[kpKey].push({answerIdx:note.answerIdx||0,title:note.title,points:note.points});
+            // dedup by nid if present
+            if(note.nid && userData.notes[kpKey].some(function(n){return n.nid===note.nid;})) return;
+            if(!note.nid) note.nid='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+            userData.notes[kpKey].push({nid:note.nid,answerIdx:note.answerIdx||0,title:note.title,points:note.points});
             notesAdded++;
           }
         });
@@ -1155,11 +1175,47 @@ noteConfirmBtn.addEventListener('click',()=>{
   const points=lines.slice(1).filter(l=>l.trim().startsWith('-')).map(l=>l.trim().substring(1).trim());
   // notes live in a separate array, only push — never mutate frozen DATA
   if(!userNotes[kpKey]) userNotes[kpKey]=[];
-  userNotes[kpKey].push(Object.freeze({answerIdx:ai, title:title, points:Object.freeze(points)}));
+  const nid='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+  userNotes[kpKey].push(Object.freeze({nid:nid,answerIdx:ai, title:title, points:Object.freeze(points)}));
   saveNotes();
   closeNotePanel();
   renderChapter(curBi,curCi);
 });
+
+/* ===== control-char sanitizer: fix "Bad control character" in JSON ===== */
+/* Escapes raw \n \r \t and other C0 control chars that appear unescaped
+   inside JSON string literals. Operates on the JSON TEXT before parse. */
+function sanitizeJsonText(text){
+  if(typeof text!=='string'||!text.length) return text;
+  var out='', inStr=false, esc=false;
+  for(var i=0;i<text.length;i++){
+    var ch=text[i], code=ch.charCodeAt(0);
+    if(esc){ out+=ch; esc=false; continue; }
+    if(ch==='\\'){ out+=ch; esc=true; continue; }
+    if(ch==='"'){ out+=ch; inStr=!inStr; continue; }
+    if(inStr && code<32){
+      // raw control char inside a string literal — escape it
+      if(ch==='\n'){ out+='\\n'; }
+      else if(ch==='\r'){ out+='\\r'; }
+      else if(ch==='\t'){ out+='\\t'; }
+      else { out+='\\u'+('000'+code.toString(16)).slice(-4); }
+    } else {
+      out+=ch;
+    }
+  }
+  return out;
+}
+/* After parse, restore escaped \n back to real newlines for display */
+function restoreControlChars(obj){
+  if(typeof obj==='string') return obj.replace(/\\n/g,'\n').replace(/\\r/g,'\r').replace(/\\t/g,'\t');
+  if(Array.isArray(obj)) return obj.map(restoreControlChars);
+  if(obj&&typeof obj==='object'){
+    var r={};
+    for(var k in obj) r[k]=restoreControlChars(obj[k]);
+    return r;
+  }
+  return obj;
+}
 
 /* ===== LZW compression + base64url encoding ===== */
 function lzEncode(input){
@@ -1210,8 +1266,9 @@ var b64url={
   }
 };
 
-/* ===== Correct minimal QR Code Generator (byte mode, EC L, v1-10) ===== */
+/* ===== QR Code Generator (byte mode, EC level L, v1-10, SVG output) ===== */
 var QR=(function(){
+  // GF(256) tables
   var EXP=new Array(512), LOG=new Array(256);
   (function(){
     var x=1;
@@ -1237,7 +1294,7 @@ var QR=(function(){
     }
     return res;
   }
-  // [total_cw, ec_per_block, blocks_g1, data_g1, blocks_g2, data_g2] for EC level L
+  // EC level L: [total_cw, ec_per_block, blocks_g1, data_g1, blocks_g2, data_g2]
   var VT=[null,
     [26,7,1,19,0,0],[44,10,1,34,0,0],[70,15,1,55,0,0],
     [100,20,1,80,0,0],[134,26,1,108,0,0],[172,18,2,68,0,0],
@@ -1246,27 +1303,28 @@ var QR=(function(){
   ];
   var AP=[null,[],[6,18],[6,22],[6,24],[6,26],[6,28],[6,30],[6,32],[6,34],[6,36]];
 
-  function makeMatrix(ver){
+  function buildMatrix(ver){
     var n=17+ver*4;
     var m=[]; for(var i=0;i<n;i++) m.push(new Array(n).fill(null));
-    // finder 7x7 + separator
+    // finder pattern 7x7 + separator (white ring)
     function finder(r,c){
       for(var i=-1;i<=7;i++)for(var j=-1;j<=7;j++){
         var rr=r+i,cc=c+j;
         if(rr<0||rr>=n||cc<0||cc>=n)continue;
-        var inner=(i>=0&&i<=6&&j>=0&&j<=6);
         var dark=false;
-        if(inner){ dark=(i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4)); }
+        if(i>=0&&i<=6&&j>=0&&j<=6){
+          dark=(i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4));
+        }
         m[rr][cc]=dark?1:0;
       }
     }
     finder(0,0);finder(0,n-7);finder(n-7,0);
-    // timing
+    // timing patterns
     for(var i=8;i<n-8;i++){
-      if(m[6][i]===null)m[6][i]=i%2===0?1:0;
-      if(m[i][6]===null)m[i][6]=i%2===0?1:0;
+      if(m[6][i]===null) m[6][i]=i%2===0?1:0;
+      if(m[i][6]===null) m[i][6]=i%2===0?1:0;
     }
-    // alignment
+    // alignment patterns
     var aps=AP[ver]||[];
     for(var ai=0;ai<aps.length;ai++)for(var aj=0;aj<aps.length;aj++){
       var r=aps[ai],c=aps[aj];
@@ -1275,12 +1333,13 @@ var QR=(function(){
         m[r+i][c+j]=(i===0&&j===0||Math.abs(i)===2||Math.abs(j)===2)?1:0;
       }
     }
-    m[n-8][8]=1; // dark module
+    // dark module
+    m[n-8][8]=1;
     return {m:m,n:n};
   }
 
-  function formatBits(mask){
-    var ec=1; // L=01
+  function computeFormatBits(mask){
+    var ec=1; // EC level L = 01
     var data=(ec<<3)|mask;
     var bch=data<<10, g=1335, d=bch;
     for(var i=14;i>=10;i--) if(d&(1<<i)) d^=g<<(i-10);
@@ -1288,18 +1347,18 @@ var QR=(function(){
   }
 
   function placeFormat(m,n,mask){
-    var bits=formatBits(mask);
-    for(var i=0;i<15;i++){
-      var b=(bits>>i)&1;
-      // vertical near top-left
-      if(i<6){m[i][8]=b;}
-      else if(i<8){m[i+1][8]=b;}
-      else if(i===8){m[7][8]=b;}
-      else{m[14-i][8]=b;}
-      // horizontal near top-left
-      if(i<8){m[8][n-1-i]=b;}
-      else{m[n-15+i][8]=b;}
-    }
+    var bits=computeFormatBits(mask);
+    // First copy: around top-left finder
+    for(var i=0;i<=5;i++) m[i][8]=(bits>>i)&1;      // bits 0-5: col 8, rows 0-5
+    m[7][8]=(bits>>6)&1;                               // bit 6: row 7
+    m[8][8]=(bits>>7)&1;                               // bit 7: row 8
+    m[8][7]=(bits>>8)&1;                               // bit 8: col 7
+    for(var i=9;i<=14;i++) m[8][14-i]=(bits>>i)&1;    // bits 9-14: row 8, cols 5-0
+    // Second copy: top-right + bottom-left
+    for(var i=0;i<=6;i++) m[8][n-1-i]=(bits>>i)&1;    // bits 0-6: row 8, cols n-1..n-7
+    m[8][n-8]=(bits>>7)&1;                             // bit 7: col n-8
+    m[n-7][8]=(bits>>8)&1;                             // bit 8: row n-7
+    for(var i=9;i<=14;i++) m[n-15+i][8]=(bits>>i)&1;  // bits 9-14: rows n-6..n-1
   }
 
   function generate(text){
@@ -1318,16 +1377,12 @@ var QR=(function(){
     var dataCap=info[2]*info[3]+(info[4]?info[4]*info[5]:0);
     // build bit stream
     var bits=[];
-    // mode: byte = 0100
-    [0,1,0,0].forEach(function(b){bits.push(b);});
-    // char count
+    [0,1,0,0].forEach(function(b){bits.push(b);}); // byte mode
     var lenBits=ver<10?8:16;
     for(var i=lenBits-1;i>=0;i--) bits.push((bytes.length>>i)&1);
-    // data
     bytes.forEach(function(b){for(var i=7;i>=0;i--)bits.push((b>>i)&1);});
-    // terminator + pad
-    while(bits.length<dataCap*8) bits.push(0);
-    // convert to bytes
+    while(bits.length<dataCap*8) bits.push(0); // terminator
+    // to bytes
     var dataBytes=[];
     for(var i=0;i<dataCap;i++){
       var b=0;
@@ -1336,14 +1391,9 @@ var QR=(function(){
     }
     // pad bytes
     var padSeq=[0xEC,0x11],pi=0;
-    for(var i=0;i<dataBytes.length;i++){
-      // already filled; pad bytes only if we didn't fill all
-    }
-    // actually fill remaining with pad sequence
-    for(var i=dataBytes.length;i<dataCap;i++){
-      dataBytes[i]=padSeq[pi%2];pi++;
-    }
-    // blocks
+    for(var i=0;i<dataBytes.length;i++){ /* already filled */ }
+    for(var i=dataBytes.length;i<dataCap;i++){ dataBytes[i]=padSeq[pi%2]; pi++; }
+    // blocks + EC
     var ecGen=rsGenPoly(info[1]);
     var blocks=[];
     for(var b=0;b<info[2];b++){
@@ -1363,15 +1413,16 @@ var QR=(function(){
     for(var i=0;i<maxD;i++) blocks.forEach(function(b){if(i<b.d.length)cw.push(b.d[i]);});
     for(var i=0;i<blocks[0].e.length;i++) blocks.forEach(function(b){cw.push(b.e[i]);});
     // matrix
-    var r=makeMatrix(ver), m=r.m, n=r.n;
-    // place data zigzag
+    var r=buildMatrix(ver), m=r.m, n=r.n;
+    // place data in zigzag (FIXED: correct column-6 skip)
     var bi=0, upward=true;
-    for(var col=n-1;col>=0;col-=2){
-      var cc=col;
-      if(cc===6) cc--;
+    var col=n-1;
+    while(col>0){
+      if(col===6) col--; // skip timing column
       for(var i=0;i<n;i++){
         var row=upward?n-1-i:i;
-        for(var c=cc;c>=cc-1&&c>=0;c--){
+        for(var c=col;c>=col-1;c--){
+          if(c<0)continue;
           if(m[row][c]!==null)continue;
           var bit=0;
           if(bi<cw.length*8) bit=(cw[bi>>3]>>(7-(bi&7)))&1;
@@ -1379,11 +1430,11 @@ var QR=(function(){
         }
       }
       upward=!upward;
+      col-=2;
     }
     // mask 0: (row+col)%2==0
     for(var row=0;row<n;row++)for(var c=0;c<n;c++){
       if(m[row][c]===null)continue;
-      // skip functional patterns
       if(row<9&&c<9)continue;
       if(row<9&&c>n-9)continue;
       if(row>n-9&&c<9)continue;
@@ -1395,19 +1446,22 @@ var QR=(function(){
   }
 
   function toSVG(text){
-    var qr=generate(text);
-    if(!qr) return '';
-    var n=qr.n, quiet=4; // quiet zone
-    var total=n+quiet*2;
-    var rects=[];
-    for(var r=0;r<n;r++)for(var c=0;c<n;c++){
-      if(qr.m[r][c]){
-        rects.push('<rect x="'+(c+quiet)+'" y="'+(r+quiet)+'" width="1" height="1"/>');
+    try{
+      var qr=generate(text);
+      if(!qr) return '';
+      var n=qr.n, quiet=4;
+      var total=n+quiet*2;
+      var rects=[];
+      for(var r=0;r<n;r++)for(var c=0;c<n;c++){
+        if(qr.m[r][c]){
+          rects.push('<rect x="'+(c+quiet)+'" y="'+(r+quiet)+'" width="1" height="1"/>');
+        }
       }
-    }
-    return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+total+' '+total+'" shape-rendering="crispEdges">'+
-      '<rect width="'+total+'" height="'+total+'" fill="#fff"/>'+
-      '<g fill="#1a1a1a">'+rects.join('')+'</g></svg>';
+      if(rects.length<10) return ''; // sanity check
+      return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+total+' '+total+'" shape-rendering="crispEdges">'+
+        '<rect width="'+total+'" height="'+total+'" fill="#ffffff"/>'+
+        '<g fill="#1a1a1a">'+rects.join('')+'</g></svg>';
+    }catch(e){ return ''; }
   }
   return {toSVG:toSVG};
 })();
@@ -1477,7 +1531,17 @@ var syncResult=null;
     if(!sync)return;
     var json=lzDecode(sync);
     if(!json){ syncResult={ok:false,msg:'参数解析错误，请确认电脑、手机网页为同一版本，重新生成同步链接'}; return; }
-    var incoming=JSON.parse(json);
+    var incoming;
+    try{ incoming=JSON.parse(sanitizeJsonText(json)); }
+    catch(e){
+      if(e.message&&e.message.indexOf('control character')>=0){
+        syncResult={ok:false,msg:'笔记内容包含非法换行/特殊字符，请检查笔记内容'};
+      } else {
+        syncResult={ok:false,msg:'参数解析错误，请确认电脑、手机网页为同一版本，重新生成同步链接'};
+      }
+      return;
+    }
+    incoming=restoreControlChars(incoming);
     if(!incoming||typeof incoming!=='object'){ syncResult={ok:false,msg:'数据格式错误'}; return; }
     var notesAdded=0,wordsAdded=0;
     if(incoming.notes&&typeof incoming.notes==='object'){
@@ -1486,7 +1550,9 @@ var syncResult=null;
         if(!userData.notes[k])userData.notes[k]=[];
         incoming.notes[k].forEach(function(n){
           if(n&&typeof n.title==='string'&&Array.isArray(n.points)){
-            userData.notes[k].push({answerIdx:n.answerIdx||0,title:n.title,points:n.points});
+            if(n.nid && userData.notes[k].some(function(x){return x.nid===n.nid;})) return;
+            if(!n.nid) n.nid='n'+Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+            userData.notes[k].push({nid:n.nid,answerIdx:n.answerIdx||0,title:n.title,points:n.points});
             notesAdded++;
           }
         });
@@ -1518,6 +1584,26 @@ function initFromHash(){
   renderChapter(0,0);
 }
 initFromHash();
+
+/* ===== note delete handler (event delegation) ===== */
+contentWrap.addEventListener('click',function(e){
+  var del=e.target.closest('.note-del');
+  if(!del) return;
+  e.preventDefault();e.stopPropagation();
+  var kpKey=del.getAttribute('data-kpkey');
+  var nid=del.getAttribute('data-nid');
+  if(!kpKey||!nid) return;
+  if(!confirm('是否删除这条补充笔记？')) return;
+  try{
+    if(userNotes[kpKey]){
+      userNotes[kpKey]=userNotes[kpKey].filter(function(n){return n.nid!==nid;});
+      if(!userNotes[kpKey].length) delete userNotes[kpKey];
+    }
+    saveNotes();
+    renderChapter(curBi,curCi);
+  }catch(err){alert('删除失败：'+err.message);}
+});
+
 // show sync result after render
 if(syncResult){
   setTimeout(function(){
