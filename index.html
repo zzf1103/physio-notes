@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>病理生理学 · 互动学习</title>
+<style>
+:root{
+  --bg:#e8ebe4;--paper:#faf8f3;--primary:#5a7a6a;--primary-dark:#3d5a4c;
+  --answer:#6b7f99;--sub:#a08468;--line:#d4d9cf;--text:#3a3d38;
+  --text-light:#6b6f68;--sidebar-bg:#eef0e9;--hover:#e0e4da;--active:#d8e0d4;
+  --highlight:#fff3c4;
+  --blank-bg:rgba(172,190,178,0.85);
+  --blank-line:rgba(140,160,148,0.9);
+  --blank-reveal-bg:#f0e8d4;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  background:var(--bg);color:var(--text);line-height:1.8;font-size:15px;
+}
+/* topbar */
+.topbar{
+  position:fixed;top:0;left:0;right:0;height:52px;
+  background:var(--primary-dark);color:#fff;
+  display:flex;align-items:center;padding:0 16px;z-index:100;
+  box-shadow:0 1px 4px rgba(0,0,0,.12);
+}
+.topbar .menu-btn{
+  background:none;border:none;color:#fff;font-size:22px;cursor:pointer;
+  margin-right:12px;display:none;padding:4px 8px;border-radius:4px;
+}
+.topbar .menu-btn:hover{background:rgba(255,255,255,.15);}
+.topbar .title{font-size:16px;font-weight:600;letter-spacing:.5px;white-space:nowrap;}
+.topbar .spacer{flex:1;}
+.topbar button.tb-btn{
+  background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);
+  color:#fff;padding:5px 14px;border-radius:16px;cursor:pointer;font-size:13px;
+  margin-right:8px;white-space:nowrap;transition:background .2s;
+}
+.topbar button.tb-btn:hover{background:rgba(255,255,255,.28);}
+.topbar button.tb-btn.active{background:#fff;color:var(--primary-dark);font-weight:600;}
+/* sidebar */
+.sidebar{
+  position:fixed;top:52px;left:0;bottom:0;width:300px;
+  background:var(--sidebar-bg);border-right:1px solid var(--line);
+  overflow-y:auto;z-index:90;transition:transform .25s ease;
+}
+.sidebar-header{padding:14px 16px 8px;font-size:13px;color:var(--text-light);border-bottom:1px solid var(--line);}
+.sidebar-header .stat{font-weight:600;color:var(--primary-dark);}
+.book-node{margin-bottom:4px;}
+.book-title{
+  padding:10px 16px;font-weight:700;font-size:14px;color:var(--primary-dark);
+  cursor:pointer;display:flex;align-items:center;gap:6px;user-select:none;
+}
+.book-title:hover{background:var(--hover);}
+.book-title .arrow{font-size:11px;transition:transform .2s;display:inline-block;}
+.book-title.collapsed .arrow{transform:rotate(-90deg);}
+.chapter-row{display:flex;align-items:stretch;}
+.chapter-name{
+  flex:1;padding:8px 12px 8px 28px;font-size:13.5px;cursor:pointer;
+  color:var(--text);border-left:3px solid transparent;
+  word-break:break-word;overflow-wrap:break-word;
+}
+.chapter-name:hover{background:var(--hover);}
+.chapter-name.active{background:var(--active);border-left-color:var(--primary);color:var(--primary-dark);font-weight:600;}
+.ch-toggle{
+  width:28px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;font-size:14px;color:var(--text-light);
+  border-left:1px solid var(--line);user-select:none;flex-shrink:0;
+}
+.ch-toggle:hover{background:var(--hover);color:var(--primary);}
+.kp-list{display:none;padding:2px 0 6px;}
+.kp-list.open{display:block;}
+.kp-item{
+  padding:5px 12px 5px 44px;font-size:12.5px;color:var(--text-light);
+  cursor:pointer;line-height:1.5;word-break:break-word;overflow-wrap:break-word;
+}
+.kp-item:hover{background:var(--hover);color:var(--text);}
+.kp-item.active{color:var(--primary-dark);font-weight:600;background:var(--active);}
+.kp-item .kp-num{
+  display:inline-block;background:var(--line);border-radius:3px;
+  padding:0 5px;margin-right:4px;font-size:11px;color:var(--text-light);
+}
+.kp-item.active .kp-num{background:var(--primary);color:#fff;}
+/* main */
+.main{margin-left:300px;margin-top:52px;padding:28px 32px 80px;min-height:calc(100vh - 52px);}
+.content-wrap{
+  max-width:780px;margin:0 auto;background:var(--paper);
+  border-radius:10px;box-shadow:0 1px 6px rgba(0,0,0,.06);padding:36px 44px;
+}
+.chapter-header{margin-bottom:24px;padding-bottom:16px;border-bottom:2px solid var(--line);}
+.chapter-header .book-crumb{font-size:13px;color:var(--text-light);margin-bottom:6px;}
+.chapter-header h2{font-size:22px;color:var(--primary-dark);font-weight:700;}
+.chapter-header .kp-count{
+  display:inline-block;margin-top:8px;font-size:12.5px;color:var(--text-light);
+  background:var(--bg);padding:2px 10px;border-radius:10px;
+}
+.kp{margin-bottom:28px;padding-bottom:20px;border-bottom:1px dashed var(--line);}
+.kp:last-child{border-bottom:none;}
+.kp-title{font-size:17px;color:var(--primary);font-weight:700;margin-bottom:12px;line-height:1.5;}
+.kp-title .kp-num{
+  display:inline-block;background:var(--primary);color:#fff;
+  border-radius:4px;padding:1px 8px;margin-right:8px;font-size:14px;
+}
+.kp.highlight{animation:flash 1.6s ease;}
+@keyframes flash{0%{background:var(--highlight);}100%{background:transparent;}}
+.answer{margin:10px 0 8px;}
+.answer-title{font-size:15px;color:var(--answer);font-weight:600;margin-bottom:6px;}
+.answer-title .a-num{
+  display:inline-block;background:var(--answer);color:#fff;
+  border-radius:3px;padding:0 6px;margin-right:6px;font-size:13px;
+}
+.answer p{margin:4px 0 6px;color:var(--text);}
+.sub{margin:8px 0 6px 12px;}
+.sub-title{font-size:14px;color:var(--sub);font-weight:600;margin-bottom:4px;}
+.sub p{margin:3px 0;color:var(--text);}
+/* user-added note sub-heading */
+.sub.user-note{
+  border-left:3px solid var(--sub);
+  padding-left:8px;
+  background:rgba(160,132,104,0.06);
+  border-radius:0 6px 6px 0;
+  padding-top:4px;padding-bottom:4px;
+}
+.sub.user-note .sub-title{color:var(--sub);}
+.sub.user-note .note-tag{
+  display:inline-block;font-size:10px;background:var(--sub);color:#fff;
+  border-radius:3px;padding:0 5px;margin-left:6px;vertical-align:middle;
+}
+/* note selecting mode: answer titles become clickable */
+body.note-selecting .answer-title{
+  cursor:pointer;
+  border-radius:6px;
+  padding:4px 8px;
+  margin-left:-8px;
+  transition:background .15s, box-shadow .15s;
+}
+body.note-selecting .answer-title:hover{
+  background:rgba(160,132,104,0.15);
+  box-shadow:0 0 0 2px rgba(160,132,104,0.3);
+}
+body.note-selecting .answer-title.note-selected{
+  background:rgba(90,122,106,0.18)!important;
+  box-shadow:0 0 0 2px var(--primary)!important;
+}
+#noteConfirmBtn:disabled{
+  background:var(--line)!important;
+  cursor:not-allowed;
+  opacity:0.6;
+}
+.points,.direct-points{margin:4px 0 4px 20px;list-style:none;}
+.points li,.direct-points li{position:relative;padding-left:18px;margin:3px 0;line-height:1.75;}
+.points li::before,.direct-points li::before{
+  content:attr(data-n);position:absolute;left:0;top:0;color:var(--text-light);font-size:13px;
+}
+/* === BLANK COVER STYLE === */
+.blank{
+  display:inline-block;
+  color:transparent;
+  position:relative;
+  cursor:pointer;
+  border-radius:1px;
+  transition:background .15s;
+}
+.blank::after{
+  content:'';
+  position:absolute;
+  left:0;right:0;
+  bottom:0.08em;
+  height:0.30em;
+  background:var(--blank-bg);
+  border-bottom:1px solid var(--blank-line);
+  transition:background .15s;
+}
+.blank:hover::after{
+  background:rgba(150,170,158,0.95);
+}
+.blank.revealed{
+  color:var(--primary-dark);
+  font-weight:600;
+  background:var(--blank-reveal-bg);
+}
+.blank.revealed::after{display:none;}
+/* orig mode: no cover, plain text */
+body.orig-mode .blank{color:inherit;background:transparent;cursor:default;}
+body.orig-mode .blank::after{display:none;}
+body.orig-mode .blank.revealed{color:inherit;font-weight:inherit;background:transparent;}
+/* bottom nav */
+.bottomnav{
+  position:fixed;bottom:0;left:300px;right:0;height:48px;
+  background:var(--paper);border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 20px;z-index:80;box-shadow:0 -1px 4px rgba(0,0,0,.04);
+}
+.bottomnav button{
+  background:var(--primary);color:#fff;border:none;padding:6px 18px;
+  border-radius:16px;cursor:pointer;font-size:13px;
+}
+.bottomnav button:hover{background:var(--primary-dark);}
+.bottomnav button:disabled{background:var(--line);cursor:not-allowed;}
+.bottomnav .position{font-size:13px;color:var(--text-light);}
+/* modal */
+.modal-mask{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:200;
+  align-items:center;justify-content:center;
+}
+.modal-mask.show{display:flex;}
+.modal{
+  background:var(--paper);border-radius:10px;padding:24px 28px;
+  max-width:520px;width:92%;max-height:85vh;overflow-y:auto;
+  line-height:1.7;font-size:14px;
+}
+.modal h3{color:var(--primary-dark);margin-bottom:10px;font-size:17px;}
+.modal p{margin:5px 0;color:var(--text);}
+.modal textarea{
+  width:100%;min-height:100px;margin:8px 0;padding:8px 10px;
+  border:1px solid var(--line);border-radius:6px;font-size:13px;
+  font-family:inherit;line-height:1.6;resize:vertical;background:#fff;
+}
+.modal .slider-row{
+  display:flex;align-items:center;gap:10px;margin:12px 0;font-size:13px;
+}
+.modal .slider-row input[type=range]{flex:1;}
+.modal .slider-val{min-width:60px;text-align:center;color:var(--primary-dark);font-weight:600;}
+.modal .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+.modal .btn-row button{
+  padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:13px;
+}
+.modal .btn-primary{background:var(--primary);color:#fff;}
+.modal .btn-secondary{background:var(--line);color:var(--text);}
+.modal .close{margin-top:14px;background:var(--primary);color:#fff;border:none;padding:6px 20px;border-radius:16px;cursor:pointer;float:right;}
+/* progress */
+.progress-bar{position:fixed;top:52px;left:300px;right:0;height:3px;background:transparent;z-index:95;}
+.progress-fill{height:100%;background:var(--primary);width:0%;transition:width .2s;}
+/* mobile */
+@media (max-width:820px){
+  .topbar{padding:0 10px;}
+  .topbar .menu-btn{display:block;}
+  .topbar .title{font-size:13px;}
+  .topbar button.tb-btn{padding:4px 8px;font-size:11px;margin-right:4px;}
+  .sidebar{transform:translateX(-100%);width:280px;box-shadow:2px 0 8px rgba(0,0,0,.1);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;padding:16px 12px 80px;}
+  .content-wrap{padding:20px 18px;}
+  .bottomnav{left:0;}
+  .chapter-header h2{font-size:19px;}
+  .kp-title{font-size:15.5px;}
+  .progress-bar{left:0;}
+  #notePanel{right:8px;left:8px;width:auto;bottom:56px;}
+}
+</style>
+</head>
+<body class="orig-mode">
+
+<div class="topbar">
+  <button class="menu-btn" id="menuBtn">☰</button>
+  <span class="title">病理生理学 · 互动学习</span>
+  <span class="spacer"></span>
+  <button class="tb-btn" id="modeBtn">挖空版</button>
+  <button class="tb-btn" id="settingsBtn" style="display:none">挖空设置</button>
+  <button class="tb-btn" id="infoBtn">说明</button>
+</div>
+
+<div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="sidebar-header">
+    <div><span class="stat" id="statBook"></span></div>
+    <div><span class="stat" id="statCh"></span> · <span class="stat" id="statKp"></span></div>
+  </div>
+  <div id="sidebarTree"></div>
+</nav>
+
+<main class="main" id="main">
+  <div class="content-wrap" id="contentWrap"></div>
+</main>
+
+<div class="bottomnav">
+  <button id="prevCh">← 上一章</button>
+  <span class="position" id="posLabel"></span>
+  <span style="display:flex;gap:8px;align-items:center;">
+    <button id="noteBtn" style="background:var(--sub);">＋ 补充笔记</button>
+    <button id="nextCh">下一章 →</button>
+  </span>
+</div>
+
+<!-- note floating panel -->
+<div id="notePanel" style="display:none;position:fixed;bottom:56px;right:16px;width:420px;max-width:calc(100vw - 32px);background:var(--paper);border-radius:12px;box-shadow:0 4px 24px rgba(0,0,0,.18);z-index:150;padding:18px 20px;">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+    <h3 style="font-size:15px;color:var(--primary-dark);margin:0;">补充笔记</h3>
+    <button id="noteCloseX" style="background:none;border:none;font-size:18px;cursor:pointer;color:var(--text-light);padding:0 4px;">✕</button>
+  </div>
+  <p style="font-size:12px;color:var(--sub);background:rgba(160,132,104,.1);padding:6px 10px;border-radius:6px;margin-bottom:10px;">
+    请在页面上点击一个 <b>1. 二级标题</b> 作为插入位置，或使用下方下拉框选择。
+  </p>
+  <textarea id="noteInput" style="width:100%;min-height:90px;padding:8px 10px;border:1px solid var(--line);border-radius:6px;font-size:13px;font-family:inherit;line-height:1.6;resize:vertical;background:#fff;" placeholder="第一行为小标题，下面用 - 开头写要点：&#10;休克的核心定义（必考）&#10;- 核心临床表现：血压进行性下降&#10;- 核心病理机制：微循环灌流不足"></textarea>
+  <div style="margin:10px 0;">
+    <label style="font-size:12px;color:var(--text-light);display:block;margin-bottom:4px;">插入到：</label>
+    <select id="noteAnswerSelect" style="width:100%;padding:5px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px;background:#fff;"></select>
+  </div>
+  <p id="notePreview" style="font-size:12px;color:var(--primary-dark);background:var(--bg);padding:6px 10px;border-radius:6px;min-height:20px;"></p>
+
+  <!-- export/import row -->
+  <div style="display:flex;gap:8px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--line);flex-wrap:wrap;">
+    <button id="exportBtn" style="padding:4px 12px;border:1px solid var(--line);background:#fff;border-radius:14px;cursor:pointer;font-size:12px;color:var(--answer);">导出笔记</button>
+    <button id="importBtn" style="padding:4px 12px;border:1px solid var(--line);background:#fff;border-radius:14px;cursor:pointer;font-size:12px;color:var(--answer);">导入笔记</button>
+    <button id="qrBtn" style="padding:4px 12px;border:1px solid var(--primary);background:var(--primary);color:#fff;border-radius:14px;cursor:pointer;font-size:12px;">生成同步二维码</button>
+    <span style="flex:1;"></span>
+  </div>
+
+  <!-- QR sync panel (hidden) -->
+  <div id="qrPanel" style="display:none;margin-top:10px;">
+    <div id="qrCanvasWrap" style="text-align:center;margin:8px 0;">
+      <canvas id="qrCanvas" width="200" height="200" style="border:8px solid #fff;border-radius:8px;box-shadow:0 1px 4px rgba(0,0,0,.1);"></canvas>
+    </div>
+    <p id="qrWarn" style="font-size:11px;color:#c0392b;margin:4px 0;display:none;">数据量较大，二维码可能识别失败，建议用JSON导入。</p>
+    <div style="margin:6px 0;">
+      <label style="font-size:11px;color:var(--text-light);">同步链接：</label>
+      <input id="qrLink" readonly style="width:100%;padding:4px 8px;font-size:10px;border:1px solid var(--line);border-radius:4px;background:var(--bg);margin-top:2px;">
+    </div>
+    <button id="copyQrLinkBtn" style="padding:4px 14px;border:none;border-radius:14px;cursor:pointer;font-size:12px;background:var(--primary);color:#fff;">复制链接</button>
+  </div>
+
+  <!-- export panel (hidden) -->
+  <div id="exportPanel" style="display:none;margin-top:10px;">
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:4px;">复制以下文本保存，在另一台设备粘贴导入：</p>
+    <textarea id="exportText" readonly style="width:100%;min-height:100px;padding:8px;font-size:11px;font-family:monospace;border:1px solid var(--line);border-radius:6px;background:var(--bg);resize:vertical;"></textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end;">
+      <button id="copyExportBtn" style="padding:4px 14px;border:none;border-radius:14px;cursor:pointer;font-size:12px;background:var(--primary);color:#fff;">一键复制</button>
+    </div>
+  </div>
+
+  <!-- import panel (hidden) -->
+  <div id="importPanel" style="display:none;margin-top:10px;">
+    <p style="font-size:12px;color:var(--text-light);margin-bottom:4px;">粘贴导出的JSON文本（合并模式，不会覆盖已有笔记）：</p>
+    <textarea id="importText" style="width:100%;min-height:100px;padding:8px;font-size:11px;font-family:monospace;border:1px solid var(--line);border-radius:6px;background:#fff;resize:vertical;" placeholder='{"note_export":"v1","notes":{"kp-0-4-0":[...]}}'></textarea>
+    <div style="display:flex;gap:8px;margin-top:6px;justify-content:flex-end;align-items:center;">
+      <span id="importResult" style="font-size:12px;color:var(--primary-dark);"></span>
+      <button id="doImportBtn" style="padding:4px 14px;border:none;border-radius:14px;cursor:pointer;font-size:12px;background:var(--primary);color:#fff;">确认导入</button>
+    </div>
+  </div>
+
+  <div style="display:flex;gap:8px;margin-top:12px;justify-content:flex-end;">
+    <button id="noteCancelBtn" style="padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:13px;background:var(--line);color:var(--text);">取消</button>
+    <button id="noteConfirmBtn" style="padding:6px 16px;border:none;border-radius:16px;cursor:pointer;font-size:13px;background:var(--primary);color:#fff;" disabled>插入笔记</button>
+  </div>
+</div>
+
+<!-- settings modal -->
+<div class="modal-mask" id="settingsMask">
+  <div class="modal">
+    <h3>挖空设置</h3>
+    <p style="font-size:13px;color:var(--text-light)">添加新考点词（一行一个），将追加到已保存词库：</p>
+    <textarea id="customWords" placeholder="例如：&#10;TNF-α&#10;微循环缺血期&#10;应激性溃疡"></textarea>
+    <div style="margin:10px 0;">
+      <p style="font-size:12px;color:var(--text-light);margin-bottom:4px;">已保存考点（点击 × 删除）：</p>
+      <div id="savedKeywords" style="max-height:100px;overflow-y:auto;padding:6px;background:var(--bg);border-radius:6px;"></div>
+    </div>
+    <div class="slider-row">
+      <span>紧凑</span>
+      <input type="range" id="densitySlider" min="1" max="3" value="2" step="1">
+      <span>宽松</span>
+      <span class="slider-val" id="densityVal">中等</span>
+    </div>
+    <div class="btn-row">
+      <button class="btn-primary" id="showAllBtn">显示全部答案</button>
+      <button class="btn-secondary" id="hideAllBtn">隐藏全部答案</button>
+      <button class="btn-secondary" id="applySettingsBtn">应用并关闭</button>
+    </div>
+  </div>
+</div>
+
+<!-- info modal -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal">
+    <h3>使用说明</h3>
+    <p>· 左侧目录按「科目 → 章节 → 知识点」三级展开。</p>
+    <p>· 点击章节名切换章节；旁边的 ＋/－ 只展开知识点列表。</p>
+    <p>· 点击知识点跳转并高亮；滚动时自动同步当前位置。</p>
+    <p>· 底部上一章 / 下一章切换。</p>
+    <p>· <b>挖空版</b>：点击顶部按钮切换，关键得分点被遮挡条盖住，点击单个空显示/隐藏答案。</p>
+    <p>· <b>挖空设置</b>：可粘贴自己的考点词（一行一个），调节挖空松紧，一键全显/全隐。</p>
+    <p>· 切换章节后保持挖空模式和设置。</p>
+    <p>· 单文件离线版，无需网络。</p>
+    <button class="close" id="modalClose">知道了</button>
+  </div>
+</div>
+
+<script>
+/* ===== DATA ISOLATION: original source is frozen, notes are separate ===== */
+const DATA = Object.freeze([{"title": "病理生理学", "chapters": [{"title": "第1章 发热", "kps": [{"num": "01", "title": "体温是如何调节的？什么是调定点学说？", "answers": [{"num": "1", "title": "体温调节的基本方式", "paras": ["体温调节通过负反馈控制系统实现，包括以下组成部分："], "subs": [{"title": "（1）体温调节的组成", "paras": [], "points": ["温度感受装置：感受表层温度和核心温度，包括外周感受器（皮肤最敏感、黏膜、内脏）和中枢感受器（热敏神经元、冷敏神经元）。", "体温调节中枢：位于视前区—下丘脑前部（POAH）。", "调定点：设定体温的\"标准温度\"，正常约37℃。", "产热装置：骨骼肌（寒战、运动）、代谢（肝脏、棕色脂肪组织）。", "散热装置：皮肤血管、汗腺等。"]}, {"title": "（2）调节过程", "paras": ["当体温偏离调定点时，调节中枢通过调整产热和散热使体温回归调定点水平。正常成人体温维持在37℃，一昼夜上下波动不超过1℃。"], "points": []}]}]}, {"num": "02", "title": "正常体温有哪些特点？不同部位体温正常值是多少？", "answers": [{"num": "1", "title": "正常体温的生理波动", "paras": ["正常成人体温维持在37℃，一昼夜上下波动不超过1℃。不同部位正常值："], "subs": [{"title": "（1）各部位体温参考范围", "paras": [], "points": ["腋窝：36.0—37.3℃", "口腔：35.5—37.5℃", "直肠：36.6—37.9℃"]}]}]}, {"num": "03", "title": "体温升高是否等于发热？体温升高如何分类？", "answers": [{"num": "1", "title": "体温升高的分类", "paras": ["体温升高不等于发热。产热大于散热时可导致体温升高，但体温升高分为以下三类："], "subs": [{"title": "（1）生理性体温升高", "paras": [], "points": ["原因：剧烈运动、月经前期、应激等。", "特点：无致热原，调定点无变化，体温可升高，无需治疗。"]}, {"title": "（2）发热（Fever）", "paras": [], "points": ["概念：机体在致热原的作用下，体温调节中枢的调定点上移而引起的调节性体温升高。", "特点：有致热原，调定点上移，体温=调定点，体温可较高但有热限。", "防治原则：对抗致热原。"]}, {"title": "（3）过热（Hyperthermia）", "paras": [], "points": ["概念：由于体温调节障碍所引起的被动性体温升高，体温超过调定点水平，属于非调节性体温升高。", "特点：无致热原，调定点不变，体温>调定点，体温可很高甚至致命。", "防治原则：物理降温。"]}]}]}, {"num": "04", "title": "过热的常见原因有哪些？", "answers": [{"num": "1", "title": "过热的三类病因", "paras": ["过热时体温调节中枢发挥作用无效，调定点不变。"], "subs": [{"title": "（1）过度产热", "paras": [], "points": ["如甲亢等。"]}, {"title": "（2）散热障碍", "paras": [], "points": ["如中暑、汗腺缺陷症等。"]}, {"title": "（3）体温调节中枢功能障碍", "paras": [], "points": ["如下丘脑损伤、出血等。"]}]}]}, {"num": "05", "title": "发热的基本发病机制包括哪几个环节？", "answers": [{"num": "1", "title": "发热的基本过程", "paras": ["发热是一个连续过程，包括四个基本环节："], "subs": [{"title": "（1）EP产生", "paras": [], "points": ["发热激活物作用于产EP细胞，使其产生和释放内生致热原（EPs）。"]}, {"title": "（2）信息传递", "paras": [], "points": ["EPs通过血液循环或迷走神经等途径到达体温调节中枢。"]}, {"title": "（3）中枢调节", "paras": [], "points": ["EPs作用于中枢，通过正调节介质和负调节介质的平衡，使调定点上移。"]}, {"title": "（4）效应", "paras": [], "points": ["通过运动神经和交感神经，使产热增加、散热减少，体温上升至新的调定点水平。"]}]}]}, {"num": "06", "title": "什么是发热激活物？分为哪几类？", "answers": [{"num": "1", "title": "发热激活物的概念", "paras": ["凡能激活体内产内生致热原细胞产生和释放内生致热原（EPs），进而引起体温升高的物质，包括外源性致热原和某些体内代谢产物。"], "subs": [{"title": "（1）微生物发热激活物", "paras": [], "points": ["细菌：革兰氏阳性菌（葡萄球菌、链球菌——致热物质为全菌体、外毒素、肽聚糖）；革兰氏阴性菌（大肠杆菌、伤寒杆菌、淋球菌——致热物质为全菌体、肽聚糖、内毒素）；分枝杆菌（结核杆菌——致热物质为全菌体、肽聚糖、多糖、蛋白质）。", "病毒：流感病毒、COVID-19、麻疹病毒等——致热成分为全病毒体、血细胞凝集素。", "真菌：白色念珠菌——致热成分为全菌体、荚膜多糖和蛋白质。", "疟原虫：间日疟原虫——致热成分为裂殖子和疟色素。", "螺旋体：梅毒螺旋体、钩端螺旋体——致热成分为代谢裂解成分、外毒素。"]}, {"title": "（2）非微生物发热激活物", "paras": [], "points": ["抗原-抗体复合物：如系统性红斑狼疮、类风湿等自身免疫病。", "致炎物：尿酸盐结晶（痛风）、硅酸盐结晶（石棉肺）、胶体、二氧化钍、金、组织坏死释放的发热激活物。", "类固醇等。"]}]}]}, {"num": "07", "title": "什么是内毒素？有何特点？", "answers": [{"num": "1", "title": "内毒素的特点", "paras": ["内毒素是革兰氏阴性菌细胞壁的成分。"], "subs": [{"title": "（1）内毒素的特性", "paras": [], "points": ["分子量大，不易通过血脑屏障。", "耐热性高。", "致热性强。", "易产生耐受性。"]}]}]}, {"num": "08", "title": "什么是内生致热原（EP）？主要有哪些？由什么细胞产生？", "answers": [{"num": "1", "title": "内生致热原的概念", "paras": ["产EP的细胞在发热激活物的作用下，产生和释放的能引起体温升高的物质。"], "subs": [{"title": "（1）主要的EP种类", "paras": [], "points": ["白细胞介素-1（IL-1）", "肿瘤坏死因子（TNF）", "干扰素（IFN）", "白细胞介素-6（IL-6）"]}, {"title": "（2）主要的产EP细胞", "paras": [], "points": ["单核巨噬细胞——主要来源细胞。", "恶性肿瘤细胞——自发产生。", "其他细胞——内皮细胞、淋巴细胞、成纤维细胞、脑内神经胶质细胞、肾小球膜细胞等。"]}]}]}, {"num": "09", "title": "内生致热原产生和释放的信号通路是什么？", "answers": [{"num": "1", "title": "EP产生的信号通路", "paras": [], "subs": [{"title": "（1）Toll样受体（TLR）介导的细胞活化", "paras": [], "points": ["革兰氏阴性菌的LPS通过TLR激活细胞。", "革兰氏阳性菌的外毒素超抗原通过TLR激活细胞。"]}, {"title": "（2）T细胞受体（TCR）介导的T淋巴细胞活化途径", "paras": [], "points": []}]}]}, {"num": "10", "title": "致热信号如何从中枢传入体温调节中枢？", "answers": [{"num": "1", "title": "致热信号传入中枢的三条途径", "paras": ["EPs作为细胞因子，分子量较大，血脑屏障对其有阻碍作用。传入途径包括："], "subs": [{"title": "（1）通过下丘脑终板血管器（OVLT）", "paras": [], "points": ["OVLT位于第三脑室视上隐窝上方，是血脑屏障的薄弱区。", "EPs在此处通过有孔毛细血管作用于血管周围的巨噬细胞等，释放介质再作用于POAH神经元。"]}, {"title": "（2）通过迷走神经", "paras": [], "points": ["迷走神经将外周的致热信号传入中枢。"]}, {"title": "（3）直接通过血脑屏障", "paras": [], "points": ["小分子量的EP可直接通过血脑屏障进入中枢。"]}]}]}, {"num": "11", "title": "EP传入中枢后，正调节介质有哪些？", "answers": [{"num": "1", "title": "中枢正调节介质", "paras": ["EPs引起发热存在潜伏期，提示EP需要通过中枢介质才能引起调定点上移。正调节介质包括："], "subs": [{"title": "（1）主要的正调节介质", "paras": [], "points": ["前列腺素E2（PGE2）——非甾体类抗炎药（阿司匹林、布洛芬、对乙酰氨基酚等）通过抑制PGE2合成发挥解热作用。", "Na+/Ca2+比值-环磷酸腺苷（cAMP）。", "促肾上腺皮质激素释放激素（CRH）。", "一氧化氮（NO）。"]}]}]}, {"num": "12", "title": "什么是热限？负调节介质有哪些？", "answers": [{"num": "1", "title": "热限的概念", "paras": ["致热原引起的发热效应在一定范围内呈量效依赖关系，但到达一定水平后，发热效应不再随致热原剂量而增加，体温上升被限定于一定高度，这种现象称为热限。发热时体温很少超过42℃，其本质是负反馈调节机制。"], "subs": [{"title": "（1）负调节介质（内生致冷原）", "paras": [], "points": ["精氨酸加压素（AVP）。", "α-黑素细胞刺激素（α-MSH）。", "脂皮质蛋白-1（Lipocortin-1）。"]}]}]}, {"num": "13", "title": "\"调定点\"上移的本质是什么？", "answers": [{"num": "1", "title": "调定点上移的机制", "paras": [], "subs": [{"title": "（1）神经元放电变化", "paras": [], "points": ["正调节介质使热敏神经元被抑制（阈值升高，如从37℃升至39℃）。", "同时冷敏神经元被兴奋。", "负调节介质则使调定点下移。"]}, {"title": "（2）调定点上移后的调节特点", "paras": [], "points": ["\"调定点\"上移后，调节功能依然正常，只不过在高水平（如39℃）下进行调节。"]}]}]}, {"num": "14", "title": "调定点上移后如何引起体温升高？", "answers": [{"num": "1", "title": "效应器的作用", "paras": ["调定点上移后，由于体温暂时低于新的调定点，机体通过以下方式使体温上升："], "subs": [{"title": "（1）产热增加", "paras": [], "points": ["骨骼肌紧张、寒战（运动神经支配）。", "提高代谢率，主要在肝脏。"]}, {"title": "（2）散热减少", "paras": ["发热时患者自觉发冷，正是因为此时实际体温低于上移后的调定点，机体按\"寒冷\"信号做出反应。"], "points": ["交感神经兴奋使皮肤血管收缩，散热减少。"]}]}]}, {"num": "15", "title": "发热分为哪几个时相？各有何特点？", "answers": [{"num": "1", "title": "典型发热的三个时相", "paras": [], "subs": [{"title": "（1）体温上升期", "paras": [], "points": ["调定点变化：上移。", "体温与调定点关系：体温<调定点。", "产热与散热：产热>散热，体温上升。", "症状：寒战、皮肤苍白、发冷恶寒、鸡皮疙瘩。"]}, {"title": "（2）高温持续期（高峰期）", "paras": [], "points": ["调定点变化：不变（维持在高水平）。", "体温与调定点关系：体温≈调定点。", "产热与散热：产热≈散热，均维持在较高水平。", "症状：寒战停止、皮肤发红、酷热。"]}, {"title": "（3）体温下降期（退热期）", "paras": [], "points": ["调定点变化：回降。", "体温与调定点关系：体温>调定点。", "产热与散热：产热<散热，体温下降。", "症状：皮肤潮红、大汗。"]}]}]}, {"num": "16", "title": "发热对机体的生物学意义是什么？", "answers": [{"num": "1", "title": "发热的利与弊", "paras": ["发热是一把双刃剑。"], "subs": [{"title": "（1）有利方面", "paras": [], "points": ["发热是免疫反应的一种表现形式，免疫功能增强。", "一定高温能灭活对热比较敏感的微生物。", "发热时免疫细胞功能加强。", "体温升高1℃，基础代谢率提高13%，心率平均增加18次/分，呼吸加强，有利于机体对抗病原体。"]}, {"title": "（2）有害方面", "paras": [], "points": ["持续发热对机体造成损伤。", "代谢过于旺盛，脏器负荷过重（体温每升高1℃，基础代谢率提高13%）。", "高温损伤。", "细胞因子损伤。", "全身性表现：物质消耗过多造成体重减轻，大汗脱水。"]}]}]}, {"num": "17", "title": "发热时机体各系统有哪些机能代谢变化？", "answers": [{"num": "1", "title": "中枢神经系统变化", "paras": ["发热时神经系统兴奋性升高。"], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["头痛、烦躁、谵语、幻觉。", "小儿中枢神经系统未发育成熟，高热易出现热惊厥（体温≥39℃时发生，表现为全身或局部肌群强直性或阵挛性抽搐，双眼凝视/斜视/上翻，伴意识丧失）。", "部分患者出现抑制表现：淡漠、嗜睡，可能与IL-1的作用有关。"]}]}, {"num": "2", "title": "循环系统变化", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["心率加快：体温每升高1℃，心率增加约18次/分，原因为高温刺激窦房结，耗氧量和CO2生成增加，意义为增强血液循环。", "心率过快可加重心脏负担，心肌潜在病灶者可诱发心衰。", "部分人大汗可致虚脱甚至循环衰竭。", "血压变化：寒战期因心率加快和外周血管收缩，血压轻度升高；高峰期和退热期因外周血管舒张，血压轻度下降。"]}]}, {"num": "3", "title": "呼吸系统变化", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["发热初期呼吸深快：原因是高温刺激呼吸中枢、呼吸中枢对CO2敏感性提高、酸性产物及CO2增加；意义为经呼吸道散热增加，但通气过度可致呼吸性碱中毒。", "持续高热可引起呼吸浅慢或不规则：原因为高温引起中枢抑制。"]}]}, {"num": "4", "title": "消化系统变化", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["原因：交感兴奋、副交感抑制、水分蒸发较多使消化液分泌减少、消化酶活性降低。", "表现：食欲减退、口腔干燥、腹胀、便秘。"]}]}]}, {"num": "18", "title": "什么是高热惊厥？其机制是什么？", "answers": [{"num": "1", "title": "高热惊厥的概念", "paras": ["高热惊厥是指小儿在呼吸道感染或其他感染性疾病早期，体温升高≥39℃时发生的惊厥。"], "subs": [{"title": "（1）临床表现", "paras": [], "points": ["突然发生的全身或局部肌群强直性或阵挛性抽搐。", "双眼球凝视、斜视、发直或上翻，伴意识丧失。"]}, {"title": "（2）发生机制", "paras": [], "points": ["发热时神经细胞代谢增强，氧气耗量增大，血流速度加快。", "神经系统处于过度兴奋状态。", "婴幼儿丘脑发育不全，无法耐受这种强烈的兴奋刺激。"]}]}]}, {"num": "19", "title": "发热的处理原则是什么？哪些情况必须及时解热？", "answers": [{"num": "1", "title": "发热的处理原则", "paras": [], "subs": [{"title": "（1）一般处理", "paras": [], "points": ["治疗原发病（如抗感染治疗）。", "对于不过高的发热（体温<39℃）又不伴其他严重疾病，可不急于解热，补充水和营养即可。"]}, {"title": "（2）必须及时解热的情况", "paras": [], "points": ["高热（>40℃），儿童尤需注意。", "心脏病患者。", "妊娠期妇女。"]}, {"title": "（3）解热措施", "paras": [], "points": ["药物解热。", "物理降温：冰敷、酒精擦拭等。"]}]}]}, {"num": "20", "title": "结核病的热型有何特点？", "answers": [{"num": "1", "title": "结核病的常见热型", "paras": [], "subs": [{"title": "（1）主要热型", "paras": [], "points": ["午后潮热。", "稽留热。", "不规则热。"]}]}]}]}, {"title": "第2章 缺氧", "kps": [{"num": "01", "title": "什么是缺氧？", "answers": [{"num": "1", "title": "缺氧的概念", "paras": ["缺氧（Hypoxia）是指组织供氧减少或利用氧障碍，引起组织、细胞代谢、功能和形态结构异常变化的病理过程。"], "subs": [{"title": "（1）缺氧的重要性", "paras": [], "points": ["是大多疾病共有的病理过程。", "是造成机体死亡的重要原因。", "大脑对缺氧最敏感。"]}]}]}, {"num": "02", "title": "常用的血氧指标有哪些？各自的定义、正常值和影响因素是什么？", "answers": [{"num": "1", "title": "血氧指标汇总", "paras": [], "subs": [{"title": "（1）血氧分压（PO2）", "paras": [], "points": ["定义：物理溶解于血液中的氧所产生的张力（又称血氧张力）。", "正常值：动脉PaO2约100 mmHg（13.3 kPa），静脉PvO2约40 mmHg（5.32 kPa）。", "影响因素：PaO2取决于吸入气氧分压和肺的通气与弥散功能；PvO2取决于组织细胞对氧的摄取和利用（内呼吸状态）。"]}, {"title": "（2）血氧容量（CO2max）", "paras": [], "points": ["定义：100 mL血液中血红蛋白被氧充分饱和时的最大携氧量。", "正常值：约20 mL/dL。", "影响因素：Hb的质和量。计算公式：CO2 = 1.34(mL/g) × Hb(g/dL)。"]}, {"title": "（3）血氧含量（CO2）", "paras": [], "points": ["定义：100 mL血液的实际携氧量，包括物理溶解的和化学结合的氧量。", "正常值：动脉CaO2约19 mL/dL，静脉CvO2约14 mL/dL。", "影响因素：取决于血氧分压和血氧容量。"]}, {"title": "（4）动静脉血氧含量差（Ca-vO2）", "paras": [], "points": ["定义：动脉和静脉血氧含量的差值。", "正常值：约5 mL/dL。", "意义：反映组织的摄氧能力。组织耗氧量 = 动静脉血氧含量差 × 组织血流量。"]}, {"title": "（5）血氧饱和度（SO2）", "paras": [], "points": ["定义：结合氧的Hb占总Hb的百分比。", "正常值：动脉SaO2约93%～98%，静脉SvO2约70%～75%。", "影响因素：主要取决于PO2（氧解离曲线），还受血液pH、温度、PCO2、红细胞2,3-DPG含量的影响。"]}]}]}, {"num": "03", "title": "2,3-DPG在氧运输中有何作用？", "answers": [{"num": "1", "title": "2,3-二磷酸甘油酸的作用", "paras": [], "subs": [{"title": "（1）作用机制", "paras": [], "points": ["2,3-DPG是血红蛋白的重要变构效应物。", "它结合于Hb中央孔隙，使中央空隙增大。", "导致血红蛋白对O2的亲和力下降，在组织中易释出氧。"]}]}]}, {"num": "04", "title": "缺氧分为哪几种类型？分类依据是什么？", "answers": [{"num": "1", "title": "缺氧的四种类型", "paras": ["根据气体交换、储存和利用的环节，缺氧分为四种类型："], "subs": [{"title": "（1）乏氧性缺氧（低张性缺氧）", "paras": [], "points": ["环节：空气→血液，以动脉血氧分压降低为基本特征。"]}, {"title": "（2）血液性缺氧", "paras": [], "points": ["环节：血液中Hb的量或质异常，导致血液携氧能力降低。"]}, {"title": "（3）循环性缺氧", "paras": [], "points": ["环节：组织血流量减少，引起组织供氧不足。"]}, {"title": "（4）组织性缺氧", "paras": [], "points": ["环节：组织细胞利用氧的能力减弱。"]}]}]}, {"num": "05", "title": "什么是乏氧性缺氧？其病因和血氧变化特点是什么？", "answers": [{"num": "1", "title": "乏氧性缺氧的概念", "paras": ["以动脉血氧分压降低为基本特征的缺氧，又称低张性缺氧。"], "subs": [{"title": "（1）基本病因", "paras": [], "points": ["吸入气氧分压过低（大气性缺氧）：如高原。", "外呼吸功能障碍（呼吸性缺氧）：如异物窒息、肺疾病等。", "静脉血分流入动脉（静脉血掺杂）：如法洛四联症（室间隔缺损、肺动脉狭窄、主动脉骑跨、右心室肥厚）。"]}, {"title": "（2）血氧变化特点", "paras": [], "points": ["动脉血氧分压（PaO2）：↓。", "血氧容量（CO2max）：正常或慢性时↑。", "动脉血氧含量（CaO2）：↓。", "动脉血氧饱和度（SaO2）：↓或慢性时正常。", "动静脉氧含量差：↓或正常（慢性）。"]}]}]}, {"num": "06", "title": "什么是发绀？", "answers": [{"num": "1", "title": "发绀的概念", "paras": ["当毛细血管中脱氧血红蛋白≥5 g/dL时，皮肤、黏膜呈青紫色，称为发绀（Cyanosis）。发绀是乏氧性缺氧的特征性表现之一，但缺氧的患者不一定都有发绀（如贫血患者Hb量少，即使全部脱氧也达不到5 g/dL）。"], "subs": []}]}, {"num": "07", "title": "什么是血液性缺氧？其病因和血氧变化特点是什么？", "answers": [{"num": "1", "title": "血液性缺氧的概念", "paras": ["由于Hb的数量减少或性质改变，以致血液携氧能力降低或Hb结合的氧不易释出所引起的缺氧。"], "subs": [{"title": "（1）基本病因", "paras": [], "points": ["Hb数量减少：各种原因引起的贫血（失血、血液疾病）。虽然PaO2和氧饱和度正常，但氧容量降低，氧含量随之减少。", "Hb性质改变——氧结合减少：  \n   · 一氧化碳（CO）中毒（煤气中毒）：CO与Hb的亲和力是O2的210倍，易竞争结合Hb形成HbCO；CO与Hb一个血红素结合后，将增加其余3个血红素对氧的亲和力；CO还抑制糖酵解，使2,3-DPG生成减少，O2与Hb亲和力增加。CO中毒被称为\"Silent killer\"。  \n   · 高铁血红蛋白血症：Fe3+与羟基牢固结合不能与O2结合；剩余Fe2+与O2亲和力增强不易释出。高铁血红蛋白含量>10%即可造成缺氧。亚硝酸盐中毒（腌制菜品、误食工业亚硝酸盐0.2～0.5 g即可中毒）导致肠源性发绀。", "氧释放减少的特殊类型（血氧含量不降低）：  \n   · 2,3-DPG降低（如输入大量库存血）。  \n   · 输入大量碱性液体。  \n   · 血红蛋白基因突变。"]}, {"title": "（2）血氧变化特点", "paras": [], "points": ["PaO2：正常。", "血氧容量：↓或正常。", "动脉血氧含量：正常或↓。", "动脉血氧饱和度：正常或↓。", "动静脉氧含量差：↓。"]}, {"title": "（3）皮肤颜色变化", "paras": [], "points": ["贫血：苍白。", "CO中毒：樱桃红色（碳氧血红蛋白COHb）。", "高铁血红蛋白症：咖啡色或青石板色（肠源性发绀）。"]}]}]}, {"num": "08", "title": "什么是循环性缺氧？其病因和血氧变化特点是什么？", "answers": [{"num": "1", "title": "循环性缺氧的概念", "paras": ["由于组织血流量减少引起组织供氧不足。"], "subs": [{"title": "（1）分类", "paras": [], "points": ["缺血性缺氧：动脉狭窄或阻塞，致动脉血灌流不足，皮肤可苍白。", "淤血性缺氧：静脉血回流受阻，血流缓慢，微循环淤血，导致动脉血灌流减少，皮肤可发绀。"]}, {"title": "（2）基本病因", "paras": [], "points": ["全身性血液循环障碍：心力衰竭、休克。", "局部性血液循环障碍：动脉硬化、血管炎、肺栓塞、血栓形成、血管痉挛或受压等。"]}, {"title": "（3）血氧变化特点", "paras": [], "points": ["PaO2、血氧容量、动脉血氧含量、动脉血氧饱和度均正常。", "动静脉氧含量差：↑（血流缓慢，组织从单位血液中摄取更多氧）。"]}]}]}, {"num": "09", "title": "什么是组织性缺氧？其病因和血氧变化特点是什么？", "answers": [{"num": "1", "title": "组织性缺氧的概念", "paras": ["在组织供氧正常的情况下，因组织、细胞利用氧的能力减弱而引起的缺氧。"], "subs": [{"title": "（1）基本病因", "paras": [], "points": ["呼吸链损伤：如氰化物中毒，抑制细胞色素氧化酶，阻断电子传递。", "呼吸酶合成障碍：呼吸链中的关键酶高度依赖维生素B族，维生素严重缺乏可致呼吸酶合成障碍（如维生素B1缺乏引起脚气病）。", "线粒体损伤：高温、放射线辐射、细菌毒素等物理/生物因素损伤线粒体。"]}, {"title": "（2）血氧变化特点", "paras": [], "points": ["PaO2、血氧容量、动脉血氧含量、动脉血氧饱和度均正常。", "动静脉氧含量差：↓（组织不能利用氧，静脉血氧含量增高）。"]}, {"title": "（3）皮肤颜色", "paras": [], "points": ["玫瑰红色（因毛细血管中氧合血红蛋白增多）。"]}]}]}, {"num": "10", "title": "各型缺氧的皮肤黏膜颜色有何不同？", "answers": [{"num": "1", "title": "各型缺氧的皮肤表现", "paras": [], "subs": [{"title": "（1）常见皮肤颜色与缺氧类型对应", "paras": [], "points": ["发绀（青紫色）：乏氧性缺氧，脱氧Hb>5 g/dL。", "樱桃红色：CO中毒，CO-Hb。", "苍白：贫血、缺血性缺氧。", "咖啡色/青石板色：亚硝酸盐中毒，高铁血红蛋白。", "玫瑰红色：组织性缺氧，氧合血红蛋白增多。"]}]}]}, {"num": "11", "title": "缺氧时机体有哪些代偿反应？", "answers": [{"num": "1", "title": "呼吸系统代偿", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["呼吸加深加快（通气增强）：PaO2降低刺激外周化学感受器。", "意义：增大呼吸面积，增加摄氧；胸内负压增大→回心血量↑→心输出量↑。", "高原习服：到达4000 m高原早期肺通气量增加15%，数天后可达5～7倍，久居后维持在较高水平。"]}]}, {"num": "2", "title": "血液系统代偿", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["氧解离曲线右移：红细胞内2,3-DPG增加，红细胞释放氧能力增强。", "红细胞和血红蛋白增多：急性时储血器官释放；慢性时促红细胞生成素↑→骨髓造血增强。", "代偿意义：增加血氧容量和血氧含量。", "不利影响：增加血液粘滞度和血流阻力，加重心脏负担。"]}]}, {"num": "3", "title": "循环系统代偿", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["心脏：心率加快、收缩力加强、心输出量增加，慢性缺氧可致右心肥大。", "血流重分布：心、脑血供↑，皮肤、内脏、骨骼肌、肾血供↓。机制为不同器官血管受体密度不同（心脑血管α受体密度低）、局部代谢产物调节、器官血管反应性不同。意义为保证重要器官氧供应。", "肺血管收缩：维持通气/血流比。", "毛细血管增生（慢性）：缺氧诱导因子HIF-1增高，缩短血氧弥散距离，增加细胞供氧量。"]}]}, {"num": "4", "title": "组织细胞代偿", "paras": [], "subs": [{"title": "（1）主要表现", "paras": [], "points": ["糖酵解增加。", "线粒体增多。", "肌红蛋白增多。", "呼吸酶增加。", "低代谢状态。"]}]}]}, {"num": "12", "title": "缺氧对机体有哪些损伤？", "answers": [{"num": "1", "title": "细胞分子水平损伤", "paras": [], "subs": [{"title": "（1）主要损伤", "paras": [], "points": ["细胞膜损伤。", "线粒体损伤。", "溶酶体损伤。", "细胞代谢障碍。", "细胞坏死和凋亡。"]}]}, {"num": "2", "title": "器官水平损伤", "paras": [], "subs": [{"title": "（1）高原肺水肿（HAPE）", "paras": [], "points": ["多发生在海拔4000 m以上，进入高原1～4天内发病。", "发病率5.7%～17.7%。", "临床表现：呼吸困难、咳粉红色泡沫痰、发绀、肺部湿啰音。", "发病机制：缺氧性肺血管收缩不均一→肺毛细血管压力增高→液体渗出；缺氧致肺血管通透性增加；肺淋巴回流障碍。"]}, {"title": "（2）缺氧性肺动脉高压", "paras": [], "points": []}, {"title": "（3）中枢性呼吸衰竭", "paras": [], "points": ["当PaO2<30 mmHg时，呼吸中枢直接抑制明显，出现潮式呼吸、间停呼吸。"]}]}]}, {"num": "13", "title": "缺氧的防治策略是什么？氧疗对各型缺氧疗效如何？", "answers": [{"num": "1", "title": "缺氧防治原则", "paras": [], "subs": [{"title": "（1）基本措施", "paras": [], "points": ["病因治疗。", "氧疗：吸入氧分压较高的空气或高浓度氧。", "注意预防氧中毒。"]}, {"title": "（2）氧疗对不同类型缺氧的疗效", "paras": [], "points": ["乏氧性缺氧：效果最好。根据PaCO2是否升高，吸氧方案不同（CO2潴留者需低流量低浓度吸氧）。", "血液性缺氧：效果不一。CO中毒可吸入高浓度氧或高压氧促进CO解离；贫血和高铁血红蛋白血症疗效有限。", "循环性缺氧：有一定疗效，可增加氧分压梯度。", "组织性缺氧：无效果，因供氧无障碍，问题在于组织不能利用氧。"]}, {"title": "（3）氧中毒", "paras": [], "points": ["概念：吸入气氧分压过高所造成的组织、细胞损害和器官功能障碍的病理过程。", "发生主要取决于氧分压，高气压环境下容易发生。", "与活性氧对细胞的毒性作用有关。"]}]}]}]}, {"title": "第3章 应激", "kps": [{"num": "01", "title": "什么是应激？什么是应激原？", "answers": [{"num": "1", "title": "应激的概念", "paras": ["应激（Stress）是指机体在各种内外环境因素刺激下所出现的全身性的非特异性适应性反应。其特点是：与刺激因素性质无直接关系，只要达到一定强度即可引起。"], "subs": [{"title": "（1）应激原的分类", "paras": ["引起应激反应的各种内外因素称为应激原（Stressor），分为三大类：", "应激反应的强弱受应激原的强度、作用时间和个体差异影响。"], "points": ["外环境因素。", "内环境因素。", "心理社会因素。"]}]}]}, {"num": "02", "title": "应激对机体都是有害的吗？", "answers": [{"num": "1", "title": "应激的分类（按对机体的影响）", "paras": [], "subs": [{"title": "（1）良性应激与恶性应激", "paras": [], "points": ["良性应激（Eustress）：对机体起积极作用的应激。", "恶性应激（Distress）：对机体起消极作用的应激。", "应激强度与表现呈倒U型关系：适度应激表现最优，过弱或过强均不利。"]}, {"title": "（2）生理性应激与病理性应激", "paras": [], "points": ["生理性应激：应激原不过于强烈、作用时间较短；是机体的重要防御反应；有利于动员身心完成任务或避开危险，不对机体造成严重影响。", "病理性应激：应激原过于强烈、作用时间持久；虽仍具有防御反应，但过度或倦怠；机体内环境稳定性被破坏，导致疾病发生。"]}]}]}, {"num": "03", "title": "应激时主要的神经内分泌反应有哪些？", "answers": [{"num": "1", "title": "蓝斑-交感-肾上腺髓质系统（LC/NE）", "paras": [], "subs": [{"title": "（1）系统组成", "paras": [], "points": ["蓝斑（LC）：位于脑干，是脑中合成去甲肾上腺素的主要部位，参与唤醒与警戒。", "上行投射：至杏仁核、海马、边缘皮质等。", "下行投射：至脊髓侧角→交感神经→肾上腺髓质。"]}, {"title": "（2）基本效应", "paras": [], "points": ["中枢：蓝斑兴奋→去甲肾上腺素增多→兴奋、警觉、紧张、焦虑、害怕、愤怒等情绪反应。", "外周：交感兴奋→去甲肾上腺素增多；肾上腺髓质→肾上腺素增多。儿茶酚胺整体增多。"]}, {"title": "（3）外周效应的意义", "paras": [], "points": ["心血管：心率↑、心肌收缩力↑、外周小血管收缩→心输出量↑、组织供血↑、维持血压；血流重分布（心/脑/骨骼肌血流↑，皮肤/腹腔器官/肾↓）保证重要器官血供。", "呼吸：支气管平滑肌舒张→肺泡通气量↑→组织供氧↑。", "代谢：胰岛素↓、胰高血糖素↑→分解加强、组织供能↑。", "其他：皮质激素、性激素、甲状腺素、白细胞、血小板、促红细胞素等变化→机体更广泛动员、免疫能力增强、凝血功能增强。"]}]}, {"num": "2", "title": "下丘脑-垂体-肾上腺皮质系统（HPA）", "paras": [], "subs": [{"title": "（1）系统组成", "paras": [], "points": ["下丘脑释放促肾上腺皮质激素释放激素（CRH）。", "垂体释放促肾上腺皮质激素（ACTH）。", "肾上腺皮质束状带释放糖皮质激素（GC）。", "上行投射至杏仁核、海马、边缘皮质等；下行通过垂体调节肾上腺皮质。"]}, {"title": "（2）基本效应", "paras": [], "points": ["中枢：CRH增多。适量CRH→良好的认知、学习能力和情绪；过量CRH→适应障碍、焦虑、抑郁；CRH还促进蓝斑-去甲肾上腺素能神经元的活性。", "外周：糖皮质激素（GC）增多。"]}, {"title": "（3）糖皮质激素的作用", "paras": [], "points": ["生理效应：升高血糖——增加糖原合成、促进糖异生、促进蛋白质分解和脂肪分解、减少血糖利用。", "药理作用：强大的抗炎作用；抗休克（稳定溶酶体膜、扩张痉挛血管、降低血管敏感性）；其他包括促进消化功能、促进泌尿、抑制性激素分泌、抑制免疫功能。"]}, {"title": "（4）应激时HPA兴奋的意义", "paras": [], "points": ["血糖供应增加：促进蛋白降解和糖原异生。", "减少耗能：抑制免疫功能（抗炎抗过敏）。", "稳定作用：稳定膜结构，减轻组织损伤。", "允许作用：维持儿茶酚胺对心血管的调节作用。"]}, {"title": "（5）HPA轴与LC/NE系统的相互作用", "paras": [], "points": ["CRH促进蓝斑-NE能神经元活性。", "GC对LC/NE系统有负反馈调节。", "GC对儿茶酚胺的心血管效应有允许作用。"]}]}, {"num": "3", "title": "其他激素变化", "paras": [], "subs": [{"title": "（1）主要变化", "paras": [], "points": ["醛固酮、抗利尿激素↑（保钠保水，增加血容量）。", "β-内啡肽↑。", "生长激素：急性↑，慢性↓。", "促性腺激素释放激素↓。"]}]}]}, {"num": "04", "title": "什么是全身适应综合征（GAS）？分哪几期？", "answers": [{"num": "1", "title": "GAS的概念", "paras": ["全身适应综合征（General adaptation syndrome, GAS）是指应激原持续作用于机体，应激表现为动态的连续过程，并最终导致内环境紊乱和疾病。肾上腺是关键器官。"], "subs": [{"title": "（1）警觉期", "paras": [], "points": ["反应：快速动员、防御。", "激素：交感兴奋，儿茶酚胺主导。", "生化：分解代谢↑、能量产生↑。", "意义：战斗-逃避。"]}, {"title": "（2）抵抗期", "paras": [], "points": ["反应：防御增强、适应。", "激素：GC激素主导。", "生化：合成代谢↑、高消耗能量。", "意义：抵抗-适应。"]}, {"title": "（3）耗竭期", "paras": [], "points": ["反应：防御下降、贮备耗竭。", "激素：GC作用下降（受体数量、亲和力↓）。", "生化：代谢紊乱、神经内分泌失衡。", "意义：疾病发生或易感性↑。"]}]}]}, {"num": "05", "title": "什么是急性期反应和急性期蛋白？", "answers": [{"num": "1", "title": "急性期反应", "paras": [], "subs": [{"title": "（1）概念", "paras": ["感染、外伤等应激原可诱发机体产生一系列快速的非特异性反应，如体温升高、血糖升高、分解代谢加强、负氮平衡等，以及血浆中某些蛋白质浓度迅速升高，称为急性期反应（APR）。"], "points": []}, {"title": "（2）急性期蛋白（APP）", "paras": [], "points": ["概念：急性期反应时血浆中浓度迅速升高的蛋白质，如C-反应蛋白、血清淀粉样蛋白、补体等。", "来源：主要由肝细胞合成，单核/吞噬细胞、成纤维细胞也可产生，受细胞因子诱导。"]}, {"title": "（3）急性期蛋白的生物学功能", "paras": [], "points": ["抑制蛋白酶：蛋白酶抑制剂等，避免蛋白酶对组织的过度损伤。", "清除异物和坏死组织：C反应蛋白、补体等。", "抗出血：凝血蛋白。"]}]}]}, {"num": "06", "title": "什么是热休克蛋白？其分类和功能是什么？", "answers": [{"num": "1", "title": "热休克蛋白的概念", "paras": ["热休克蛋白（HSP）是指热应激或其他应激时细胞新合成或合成增加的一组蛋白质，又称为应激蛋白。主要在细胞内发挥功能，属非分泌型蛋白质。其特点为广泛性、保守性、非特异性——不同性质的应激原均可诱导。"], "subs": [{"title": "（1）分类", "paras": [], "points": ["组成性HSP：为细胞的结构蛋白，正常时即存在于细胞内，帮助新生蛋白质进行正确的折叠、移位、降解，称为\"分子伴侣\"。", "诱生性HSP：由各种应激原诱导生成，参与受损蛋白质的修复或移除，保护细胞免受严重损伤，加速修复，提高细胞对应激原的耐受性。"]}]}]}, {"num": "07", "title": "应激可引起哪些躯体疾病？", "answers": [{"num": "1", "title": "应激相关疾病的概念区分", "paras": [], "subs": [{"title": "（1）三类概念", "paras": [], "points": ["应激性疾病：由应激反应作为主要病因直接引起的疾病。", "应激相关疾病：应激反应只是病因之一或作为诱因，在应激状态下加速发生发展的疾病。", "心身疾病：以心理社会因素导致的持久或强烈应激作为主要病因或诱因所引起的躯体疾病。"]}]}, {"num": "2", "title": "心血管系统疾病", "paras": [], "subs": [{"title": "（1）主要疾病", "paras": [], "points": ["原发性高血压、冠心病、心律失常、心肌梗死、心源性猝死。"]}]}, {"num": "3", "title": "内分泌系统疾病", "paras": [], "subs": [{"title": "（1）主要疾病", "paras": [], "points": ["糖尿病、发育迟缓、月经紊乱、性欲减退。"]}]}, {"num": "4", "title": "免疫系统疾病", "paras": [], "subs": [{"title": "（1）主要疾病", "paras": [], "points": ["免疫功能障碍、易感染、自身免疫疾病。"]}]}, {"num": "5", "title": "消化系统疾病", "paras": [], "subs": [{"title": "（1）主要疾病", "paras": [], "points": ["应激性溃疡、溃疡性结肠炎。"]}]}]}, {"num": "08", "title": "什么是应激性溃疡？其发病机制是什么？", "answers": [{"num": "1", "title": "应激性溃疡的概念", "paras": ["应激性溃疡（Stress ulcer）是指患者在遭受各类重伤及大手术、重病或其他应激情况下（包括心理应激），出现胃、十二指肠黏膜的急性损伤。发病率75%～100%。表现为黏膜糜烂、浅表溃疡、渗血等，可能造成消化道大出血，少数可发生穿孔。"], "subs": [{"title": "（1）临床特点", "paras": [], "points": ["发病率高、发病快。", "溃疡：由于溃疡浅表，胃或十二指肠穿孔极为罕见。", "出血：可轻可重，常表现为呕血或黑粪，出血严重时可致死。"]}, {"title": "（2）发病机制", "paras": [], "points": ["黏膜缺血（最主要原因）：交感-肾上腺髓质兴奋，血液重分布，胃肠黏膜缺血。", "上皮细胞受损：缺血导致上皮细胞损伤。", "碳酸氢根和黏液生成减少：胃黏膜屏障（紧密连接、黏液、HCO3-）受损。", "胃腔中H+进入黏膜：反向扩散。", "上皮细胞再生能力减弱：黏膜损伤不易修复。"]}, {"title": "（3）诱发因素", "paras": [], "points": ["严重颅脑、颈脊髓外伤。", "严重烧伤（面积>30%）。", "严重创伤、多发伤。", "各种困难、复杂的手术。", "脓毒症。", "多脏器功能障碍综合征（MODS）。", "休克，心、肺、脑复苏后。", "严重心理应激，如精神创伤。", "心脑血管意外等。"]}]}]}, {"num": "09", "title": "应激可引起哪些心理疾病？", "answers": [{"num": "1", "title": "应激相关心理疾病", "paras": [], "subs": [{"title": "（1）急性应激障碍（ASD）", "paras": [], "points": ["概念：由于急剧而严重的社会心理应激原作用，在应激原刺激后数分钟至数小时内出现的功能性精神障碍，又称急性心因性反应。", "症状：高变异性；\"茫然\"状态（意识范围局限、不能领会外在刺激、定向错误）；对周围环境退缩（分离性木僵）；激越性活动过多（逃跑反应或神游）；惊恐性焦虑（心动过速、出汗、面赤）；症状快速出现和消失；预后良好。"]}, {"title": "（2）创伤后应激障碍（PTSD）", "paras": [], "points": ["概念：由于非同寻常的威胁或灾难事件和心理创伤，导致延迟出现和长期持续的精神障碍，又称延迟性心因性反应。", "影响因素：生物学因素（遗传）、心理学因素、社会环境因素（最常见）。", "共病问题：抑郁症、麻木、焦虑、躁狂、精神分裂等。", "三大核心症状：  \n   · 高警觉状态：过度警觉、易激惹、入睡困难、易惊醒、心慌、出汗等。  \n   · 回避与麻木：回避与创伤相关的刺激（思想、感受、谈话、活动、地点或人物）；情感麻木（反应迟钝、与人疏远等）。  \n   · 反复重现创伤性体验：反复噩梦、错觉、幻觉、症状闪回、易触景生情而增加精神痛苦。"]}, {"title": "（3）抑郁症", "paras": [], "points": ["概念：由各种原因引起的以情绪低落为主要症状的精神障碍。主要表现为情绪低落、兴趣丧失、思维迟缓、自罪感，甚至出现自杀观念。", "发病机制尚不明确，可能涉及：免疫系统激活、神经递质改变、神经内分泌功能紊乱（HPA轴功能紊乱）、神经可塑性受损、脑结构与功能改变。"]}]}]}]}, {"title": "第4章 休克", "kps": [{"num": "01", "title": "什么是休克？", "answers": [{"num": "1", "title": "休克的概念", "paras": ["休克是指在各种致病因子作用下，机体循环功能严重障碍，组织器官微循环血液灌流不足，进而引起组织细胞缺氧，重要器官的功能、代谢出现严重紊乱的全身性危重病理过程。"], "subs": [{"title": "（1）休克的核心要素（SHOCK核心）", "paras": [], "points": ["组织灌注不足（Inadequate Tissue Perfusion）。", "组织O2供应和营养不足。", "代谢废物消除不足。"]}]}]}, {"num": "02", "title": "休克的常见病因有哪些？如何分类？", "answers": [{"num": "1", "title": "休克的病因分类", "paras": [], "subs": [{"title": "（1）常见病因", "paras": [], "points": ["失血与失液。", "创伤。", "感染。", "过敏。", "急性心功能障碍。", "强烈神经刺激。"]}, {"title": "（2）按始动环节分类（BPP模型）", "paras": [], "points": ["低血容量性：失血、失液、烧伤、创伤等——血容量减少（Blood）。", "心源性：心脏和大血管病变——心泵功能障碍（Pump）。", "血管源性：感染、过敏、强烈神经刺激——血管张力异常（Pipe）。"]}, {"title": "（3）按血流动力学特点分类", "paras": [], "points": ["低排高阻型（冷休克）：心输出量↓、外周阻力↑、皮肤温度低、皮肤苍白/蓝。大多数休克属于此型。主要与α受体兴奋有关。", "高排低阻型（暖休克）：心输出量↑或正常、外周阻力↓、皮肤温暖、皮肤粉。主要见于感染性休克的早期。与β受体兴奋有关。", "低排低阻型：为难治性休克。"]}]}]}, {"num": "03", "title": "什么是微循环？其结构和调控特点是什么？", "answers": [{"num": "1", "title": "微循环的概念", "paras": ["微循环是指微动脉与微静脉之间微血管的血液循环，是组织与血液进行物质交换的最小功能单位。"], "subs": [{"title": "（1）微循环血管的功能分类", "paras": [], "points": ["阻力血管（微动脉）：参与调整全身血压和血液分配。", "交换血管（真毛细血管）：血管内外物质交换。", "容量血管（微静脉）：参与调整回心血量、调节体温。"]}, {"title": "（2）微循环的调控因素", "paras": [], "points": ["全身性体液因子：儿茶酚胺、血管紧张素II、抗利尿激素等（缩血管为主）。", "局部血管活性物质：组胺、腺苷、缓激肽、内啡肽等（舒血管为主）。", "乳酸等酸性产物堆积：降低血管对缩血管物质的反应性。"]}]}]}, {"num": "04", "title": "休克分哪几期？各期微循环有何特点？", "answers": [{"num": "1", "title": "休克的分期（以失血性休克为例）", "paras": [], "subs": [{"title": "（1）休克早期（代偿期）", "paras": [], "points": ["微循环特点：少灌少流、灌少于流（灌<流）。", "组织状态：缺血性缺氧。", "机制：交感神经兴奋→缩血管物质（儿茶酚胺、血管紧张素、血管加压素、血栓素等）释放→微血管持续收缩，前阻力>后阻力。", "系统循环：回心血量↑、心输出量↑、血压正常或略低、血流重分布。", "临床表现：面色苍白、四肢湿冷、出汗、尿量减少、烦躁但神志清楚、脉细速、血压不变或略降（脉压差降低）。"]}, {"title": "（2）休克期（失代偿期/淤血性缺氧期）", "paras": [], "points": ["微循环特点：灌而少流、灌多于流（灌>流）。", "组织状态：淤血性缺氧。", "机制：酸中毒使血管平滑肌对儿茶酚胺反应性降低；局部舒血管代谢产物（组胺、腺苷、缓激肽、NO等）增多；血液流变学改变（红细胞聚集、白细胞附壁嵌塞、微血栓形成）。", "系统循环：回心血量↓、心输出量↓、血压进行性下降、器官灌注↓↓。", "临床表现：皮肤紫绀花斑、少尿或无尿、神志淡漠、血压进行性下降（约80/50 mmHg）、心搏无力。"]}, {"title": "（3）休克晚期（难治期/不可逆期）", "paras": [], "points": ["微循环特点：不灌不流。", "组织状态：极度缺氧/混合型缺氧。", "机制：微血管反应性显著下降（平滑肌麻痹）；DIC发生（血液高凝、微血栓形成）。", "系统循环：回心血量↓↓、心输出量↓↓、血压↓↓、多器官功能障碍。", "难治原因：DIC、全身炎症反应综合征（SIRS）、多器官功能衰竭（MODS）、无复流现象、升压药失效。"]}]}]}, {"num": "05", "title": "休克早期机体有哪些代偿机制？", "answers": [{"num": "1", "title": "休克早期的代偿方式", "paras": [], "subs": [{"title": "（1）\"自身输血\"", "paras": [], "points": ["儿茶酚胺等缩血管物质使肌性微静脉、小静脉收缩，加之肝脾等储血器官血管收缩，储存的血液迅速向心回流，增加回心血量。"]}, {"title": "（2）\"自身输液\"", "paras": [], "points": ["微循环血管收缩，真毛细血管网血流量减少，毛细血管内流体静压降低，组织液从组织间隙大量回流入毛细血管，增加回心血量。"]}, {"title": "（3）血液重分布", "paras": [], "points": ["不同器官对儿茶酚胺的反应不同：皮肤、腹腔脏器、骨骼肌等α受体密度高，血管强烈收缩；脑、冠状动脉α受体密度低，血管不收缩。", "意义：保证心、脑重要器官的血液供应。"]}, {"title": "（4）血压维持", "paras": [], "points": ["回心血量↑→心输出量↑。", "外周阻力↑。", "因此休克早期血压往往不降，但脉压差降低。"]}]}]}, {"num": "06", "title": "休克期微循环淤血的机制是什么？", "answers": [{"num": "1", "title": "微血管扩张的机制", "paras": [], "subs": [{"title": "（1）酸中毒", "paras": [], "points": ["缺血缺氧→乳酸↑→血浆H+↑→酸中毒→血管平滑肌对儿茶酚胺反应性降低。"]}, {"title": "（2）局部舒血管代谢产物增多", "paras": [], "points": ["肥大细胞释放组胺。", "ATP分解产生腺苷。", "激肽系统激活，缓激肽↑。", "细胞解体释放K+通道开放、Ca2+通道抑制。", "以上均使血管平滑肌舒张、毛细血管扩张、血管通透性增高。"]}, {"title": "（3）LPS的作用", "paras": [], "points": ["内毒素激活巨噬细胞释放NO，使血管平滑肌舒张。"]}]}, {"num": "2", "title": "血液瘀滞的机制", "paras": [], "subs": [{"title": "（1）主要变化", "paras": [], "points": ["血流速度减慢→红细胞聚集。", "微静脉白细胞附壁。", "毛细血管白细胞嵌塞。", "微血栓形成。", "以上共同导致微循环阻力增加，血液淤滞。"]}]}]}, {"num": "07", "title": "微循环淤血有什么后果？", "answers": [{"num": "1", "title": "淤血的恶性循环", "paras": [], "subs": [{"title": "（1）\"自身输血\"停止", "paras": [], "points": ["静脉系统容量血管扩张→血管床容积增大→回心血量减少。"]}, {"title": "（2）\"自身输液\"停止", "paras": [], "points": ["毛细血管血流淤滞→流体静压升高。", "毛细血管通透性增高→血浆外渗、血液浓缩。"]}, {"title": "（3）恶性循环形成", "paras": [], "points": ["毛细血管流体静压↑、通透性↑→血浆外渗→血液浓缩→红细胞聚集→微循环淤滞加重。", "微循环血管大量开放→血液滞留→回心血量减少→心输出量、血压下降→交感兴奋→组织灌流进一步减少→缺血缺氧酸中毒加重。"]}]}]}, {"num": "08", "title": "休克晚期为什么难治？", "answers": [{"num": "1", "title": "休克晚期的难治机制", "paras": [], "subs": [{"title": "（1）DIC的发生", "paras": [], "points": ["血液高凝状态（纤维蛋白原增加、血细胞聚集、血液粘滞度高）。", "凝血系统激活→微血栓形成→消耗凝血因子→出血。"]}, {"title": "（2）全身炎症反应综合征（SIRS）", "paras": [], "points": ["严重缺血缺氧、酸中毒、肠屏障功能下降→肠源性细菌和内毒素入血→激活单核/吞噬细胞和中性粒细胞→产生大量炎症介质和抗炎介质→全身炎症反应失控→血管内皮细胞及实质脏器细胞损伤。"]}, {"title": "（3）多器官功能衰竭", "paras": [], "points": ["微血栓堵塞、无复流现象。"]}, {"title": "（4）微循环衰竭的后果", "paras": [], "points": ["循环衰竭，对升压药失去反应：血压进行性下降、脉搏细速、中心静脉压降低、静脉塌陷。", "毛细血管无复流现象（no-reflow）：白细胞黏着嵌塞、毛细血管内皮肿胀、DIC。", "重要器官功能障碍或衰竭。"]}]}]}, {"num": "09", "title": "休克时细胞有哪些损伤？", "answers": [{"num": "1", "title": "细胞损伤的机制", "paras": [], "subs": [{"title": "（1）细胞膜损伤", "paras": [], "points": ["缺氧、酸中毒→ATP生成减少→Na+-K+-ATP酶失灵→钠流入细胞→细胞水肿→细胞膜受损。"]}, {"title": "（2）线粒体损伤", "paras": [], "points": ["缺氧导致线粒体功能障碍→ATP合成进一步减少。"]}, {"title": "（3）溶酶体损伤", "paras": [], "points": ["溶酶体膜破裂→溶酶体酶释放→细胞死亡。"]}]}]}, {"num": "10", "title": "休克可引起哪些重要器官功能障碍？", "answers": [{"num": "1", "title": "多器官功能障碍综合征（MODS）", "paras": [], "subs": [{"title": "（1）概念", "paras": ["在严重创伤、烧伤、感染和休克或复苏后，原无器官功能障碍的患者同时或短时间内相继出现2个以上器官系统功能障碍，以致机体内环境稳定必须依靠临床干预才能维持的综合征。死亡率约70%。"], "points": []}, {"title": "（2）各器官发生概率", "paras": [], "points": ["肺最常见，其次为肝、肾、胃肠道、心。", "衰竭器官数与死亡率：单个器官15%～30%；2个45%～55%；3个>80%；4个很少存活。"]}]}, {"num": "2", "title": "急性肾功能衰竭（休克肾）", "paras": [], "subs": [{"title": "（1）表现", "paras": [], "points": ["各型休克常伴发急性肾功能衰竭。", "临床表现为少尿，伴氮质血症、高钾及代谢性酸中毒。", "早期为功能性肾衰；中后期为器质性肾衰，伴肾小管坏死。"]}]}, {"num": "3", "title": "急性呼吸衰竭（休克肺/ARDS）", "paras": [], "subs": [{"title": "（1）表现", "paras": [], "points": ["典型病理变化：肺充血、水肿、血栓形成及肺不张、肺透明膜形成。", "机制：肺泡-毛细血管膜损伤→弥散障碍和V/Q比例失调。", "典型临床表现：进行性低氧血症和呼吸困难。"]}]}, {"num": "4", "title": "心功能障碍", "paras": [], "subs": [{"title": "（1）原因", "paras": [], "points": ["冠状动脉血流量减少。", "酸中毒和高血钾使心肌收缩力减弱。", "心肌抑制因子（MDF）的作用。", "心肌内DIC。", "细菌毒素对心功能的抑制。"]}]}, {"num": "5", "title": "神经系统功能障碍", "paras": [], "subs": [{"title": "（1）发展过程", "paras": [], "points": ["早期：血液重新分布+脑自身调节，脑供血尚可，仅烦躁不安，无明显功能障碍。", "进一步发展：脑组织缺血缺氧→能量衰竭→有害代谢物堆积→离子转运紊乱→脑细胞损伤→神志淡漠、昏迷。", "严重休克后期：脑血供不足+DIC微血栓形成+管壁通透性增高→脑水肿、脑疝。"]}]}, {"num": "6", "title": "胃肠功能紊乱与肝功能不全", "paras": [], "subs": [{"title": "（1）胃肠道变化", "paras": [], "points": ["胃黏膜损害、肠缺血和应激性溃疡。", "临床表现：腹痛、消化不良、呕血黑便。", "肠黏膜损伤→SIRS→MODS→MSOF。"]}, {"title": "（2）肝脏变化", "paras": [], "points": ["肝脏Kupffer细胞活化分泌炎症介质（IL-8、TF等）促进白细胞黏附，引起微循环障碍。", "TNFα、NO等促自由基释放，损伤肝细胞。"]}]}]}, {"num": "11", "title": "休克的防治原则是什么？", "answers": [{"num": "1", "title": "休克防治措施", "paras": [], "subs": [{"title": "（1）治疗原则", "paras": [], "points": ["去除病因：积极止血、止痛，控制感染。", "补充血容量：\"需多少，补多少\"。", "纠正酸中毒。", "合理使用血管活性药物。", "防治细胞损伤。", "体液因子拮抗剂。"]}]}]}]}, {"title": "第5章 弥散性血管内凝血（DIC）", "kps": [{"num": "01", "title": "人体凝血系统是如何工作的？", "answers": [{"num": "1", "title": "凝血的基本过程", "paras": ["凝血过程分为三个阶段：凝血酶原激活物形成→凝血酶原转变为凝血酶→纤维蛋白原转变为纤维蛋白。"], "subs": [{"title": "（1）外源性凝血途径", "paras": [], "points": ["启动：组织损伤释放组织因子（TF，即凝血因子Ⅲ）。", "过程：TF与Ⅶ结合，在Ca2+参与下激活Ⅹ为Ⅹa。"]}, {"title": "（2）内源性凝血途径", "paras": [], "points": ["启动：血管内皮损伤，胶原暴露，激活Ⅻ为Ⅻa。", "过程：Ⅻa激活激肽释放酶原（PK）为激肽释放酶（K），继而激活Ⅺ为Ⅺa，再激活Ⅸ为Ⅸa，Ⅸa与Ⅷa、Ca2+共同激活Ⅹ为Ⅹa。"]}]}]}, {"num": "02", "title": "人体有哪些抗凝系统？", "answers": [{"num": "1", "title": "抗凝体系的组成", "paras": [], "subs": [{"title": "（1）细胞抗凝体系", "paras": [], "points": ["单核-巨噬细胞：清除凝血物质。", "血管内皮细胞（VEC）：具有多种抗凝功能。", "肝细胞：合成抗凝物质、灭活活化凝血因子。"]}, {"title": "（2）体液抗凝体系", "paras": [], "points": ["抗凝血酶III（ATⅢ）：单链糖蛋白，由肝细胞和血管内皮细胞分泌，与内皮细胞表面肝素样物质形成复合物灭活凝血酶。肝素可加强这种结合，使灭活速度加大2000倍。", "肝素：酸性粘多糖，由肠黏膜肥大细胞合成。抗凝作用包括：直接抑制因子Ⅹa；与ATIII结合增强其作用；激活肝素辅因子II（HCII）；增强蛋白C系统抑制物活性。", "组织因子途径抑制物（TFPI）：内皮细胞合成的糖蛋白。作用过程为TFPI先结合Ⅹa，再与Ⅶa/TF结合，抑制Ⅶa/TF活性。", "血栓调节蛋白（TM）-蛋白C系统：凝血酶与内皮细胞表面TM结合后，激活蛋白C（PC），活化蛋白C在蛋白S（PS）辅助下灭活Ⅴa、Ⅷa，降低凝血活性。"]}]}]}, {"num": "03", "title": "纤溶系统是如何工作的？", "answers": [{"num": "1", "title": "纤溶系统的组成", "paras": [], "subs": [{"title": "（1）纤溶酶原激活物", "paras": [], "points": ["外源性：组织型t-PA、尿激酶型u-PA。", "内源性：FⅫa、FⅪa等。"]}, {"title": "（2）纤溶过程", "paras": [], "points": ["纤溶酶原在激活物作用下转变为纤溶酶。", "纤溶酶降解纤维蛋白（原），水解凝血酶和凝血因子。"]}, {"title": "（3）纤溶抑制物", "paras": [], "points": ["PAI-1（纤溶酶原激活物抑制物-1）抑制纤溶酶原激活。"]}]}]}, {"num": "04", "title": "什么是DIC？其本质是什么？", "answers": [{"num": "1", "title": "DIC的概念", "paras": ["弥散性血管内凝血（DIC）是指在致病因素作用下，凝血系统活化，全身微血管血栓形成，凝血因子大量消耗并继发纤溶亢进，引起出血及微循环衰竭为特征的临床综合征。"], "subs": [{"title": "（1）DIC的本质", "paras": ["凝血功能异常，表现为两个阶段："], "points": ["血液凝固性先升高：微血管内广泛微血栓形成。", "随后转变为血液凝固性降低：凝血因子和血小板大量消耗+继发纤溶亢进→出血。"]}]}]}, {"num": "05", "title": "DIC的常见病因有哪些？", "answers": [{"num": "1", "title": "DIC的病因", "paras": ["凡是能引起血管内皮损伤、组织损伤、红细胞/血小板/白细胞损伤，以及促凝物质入血的因素均可导致DIC。"], "subs": [{"title": "（1）常见病因", "paras": [], "points": ["感染（严重感染）：最常见，约占32%。", "恶性肿瘤：约占24%。", "产科意外：约占18%，其中羊水栓塞是产科意外导致DIC最常见的原因。", "手术与创伤：约占9.5%。", "其他（休克、过敏等）：约占15%。"]}]}]}, {"num": "06", "title": "DIC的发病机制是什么？", "answers": [{"num": "1", "title": "组织因子释放，启动外源性凝血系统", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["组织损伤释放大量TF入血。", "TF广泛存在于各组织，以胎盘蜕膜（2000 µ/mg）、脑（50）、肺脏（50）最丰富。", "TF启动外源性凝血途径。"]}]}, {"num": "2", "title": "血管内皮细胞损伤，启动内源性凝血系统", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["损伤的VEC释放TF，启动外源性凝血系统。", "胶原暴露，激活FⅫ，启动内源性凝血系统。", "VEC的抗凝作用降低：产生t-PA减少、PAI-1增多（纤溶活性降低）；NO、PGI2、ADP酶产生减少（抑制血小板黏附聚集功能降低）。"]}]}, {"num": "3", "title": "促凝物质释放入血", "paras": [], "subs": [{"title": "（1）常见情况", "paras": [], "points": ["急性坏死性胰腺炎：胰蛋白酶入血激活凝血酶原。", "羊水栓塞：羊水含促凝物质。", "肿瘤细胞分泌促凝物质。", "蛇毒：激活FⅤ、FⅩ等，促进DIC发生。"]}]}, {"num": "4", "title": "血细胞损伤和血小板激活", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["红细胞破坏：释放大量ADP，促进血小板黏附聚集。", "白细胞破坏：释放TF样物质；白细胞受刺激表达TF。", "血小板激活：黏附、聚集，促进凝血。"]}]}]}, {"num": "07", "title": "哪些因素会促进DIC的发生？", "answers": [{"num": "1", "title": "DIC发生的影响因素", "paras": [], "subs": [{"title": "（1）微循环障碍（休克）", "paras": [], "points": ["内皮细胞损伤，启动凝血通路。", "血浆浓缩聚集。", "器官衰竭，对凝血和纤溶产物的清除能力降低。"]}, {"title": "（2）单核吞噬系统功能障碍", "paras": [], "points": ["正常时单核吞噬细胞吞噬清除内毒素、免疫复合物和含TF的细胞碎片，以及凝血因子、纤维蛋白、FDP、补体等。", "单核吞噬细胞功能受损或被封闭（如全身Shwartzman反应：首次小剂量内毒素被吞噬后，再次注射内毒素则发生DIC和休克，原因是单核吞噬细胞系统被\"封闭\"），血中促凝物质清除↓↓，促进DIC发生。"]}, {"title": "（3）肝功能严重障碍", "paras": [], "points": ["肝脏合成多种抗凝因子（抗凝血酶III、蛋白C）。", "肝脏灭活活化的凝血因子（Ⅸa、Ⅹa、Ⅺa）。", "肝功能障碍时生成和灭活均发生障碍，且细胞坏死释放组织因子。"]}, {"title": "（4）血液高凝状态", "paras": [], "points": ["妊娠三周起血中血小板及凝血因子↑，而AT、t-PA、u-PA↓。", "胎盘产生PAI↑。", "血液渐趋高凝状态，故产科意外易诱发DIC。"]}]}]}, {"num": "08", "title": "DIC时FDP是如何形成的？有何意义？", "answers": [{"num": "1", "title": "纤维蛋白降解产物（FDP）", "paras": [], "subs": [{"title": "（1）概念", "paras": ["纤溶酶分解纤维蛋白和纤维蛋白原的产物称为FDP，具有抗凝作用，是纤溶系统功能亢进的标志。"], "points": []}, {"title": "（2）FDP的抗凝机制", "paras": [], "points": ["X、Y片段阻止可溶性纤维蛋白单体聚合。", "Y、E片段有抗凝血酶作用。", "FDP抑制血小板的黏附和聚集。"]}]}]}, {"num": "09", "title": "DIC的常用实验室检查有哪些？", "answers": [{"num": "1", "title": "\"3P\"试验（鱼精蛋白副凝血试验）", "paras": [], "subs": [{"title": "（1）原理", "paras": [], "points": ["鱼精蛋白加入患者血浆后，可与FDP结合，使血浆中原与FDP X片段结合的纤维蛋白单体分离并彼此聚合而凝固。这种不需酶的作用而形成纤维蛋白的现象称为副凝试验。", "目的：检查X片段的存在。", "意义：DIC患者呈阳性反应。"]}]}, {"num": "2", "title": "D-二聚体检查", "paras": [], "subs": [{"title": "（1）意义", "paras": [], "points": ["D-二聚体是纤溶酶分解稳定的交联纤维蛋白的产物。", "是微血栓（DIC）形成的标志性检测指标。", "是反映继发性纤溶亢进的重要指标。"]}]}]}, {"num": "10", "title": "DIC分哪几期？", "answers": [{"num": "1", "title": "DIC的分期", "paras": [], "subs": [{"title": "（1）高凝期", "paras": [], "points": ["凝血酶增加，微血栓形成。", "血液凝固性升高。"]}, {"title": "（2）消耗性低凝期", "paras": [], "points": ["凝血因子和血小板因大量消耗而减少。", "继发纤溶开始。", "出血倾向。"]}, {"title": "（3）继发性纤溶亢进期", "paras": [], "points": ["纤溶酶大量增加。", "FDP大量生成。", "明显出血。"]}]}]}, {"num": "11", "title": "DIC对机体有哪些影响？", "answers": [{"num": "1", "title": "出血（最常见、最明显）", "paras": [], "subs": [{"title": "（1）特点", "paras": [], "points": ["发生率84%～96%，出血突然发生。", "表现：广泛皮肤淤点瘀斑、皮下血肿、创面出血、内脏出血（胃肠道50%、血尿32%、咯血24%等）。"]}, {"title": "（2）出血机制", "paras": [], "points": ["凝血物质大量消耗。", "继发性纤溶功能亢进。", "FDP的抗凝作用。", "血管损伤。"]}]}, {"num": "2", "title": "休克", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["微血栓形成→微循环障碍→血流量降低。", "广泛严重出血→血容量减少→心脏泵血功能减弱。", "扩血管物质（激肽、组胺等）释放→微血管扩张→外周阻力降低。", "发生率50%～80%，常在DIC早期即突然出现。"]}]}, {"num": "3", "title": "多器官功能障碍", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["微血栓大量形成→微循环灌流障碍→缺血缺氧。", "常见受累器官：肺（呼吸功能障碍）、肾（肾功能障碍）、心（心泵功能障碍）、肾上腺皮质（华-佛综合征）、垂体（席汉综合征）。"]}]}, {"num": "4", "title": "微血管病性溶血性贫血", "paras": [], "subs": [{"title": "（1）机制", "paras": [], "points": ["红细胞挂在纤维蛋白丝上，受血流冲击而破裂。", "酸中毒和毒素作用使红细胞变形能力下降、脆性增加。", "微血栓使血流通道受阻，红细胞被挤压变形。", "外周血涂片可见裂体细胞和盔形红细胞。发生率7%～15%。"]}]}]}, {"num": "12", "title": "DIC的防治原则是什么？", "answers": [{"num": "1", "title": "DIC防治措施", "paras": [], "subs": [{"title": "（1）治疗原则", "paras": [], "points": ["消除病因，治疗原发病。", "改善微循环。", "重建凝血和纤溶间的动态平衡。", "维持重要器官功能。"]}]}]}]}, {"title": "第6章 水平衡及紊乱", "kps": [{"num": "01", "title": "体液是如何分布的？", "answers": [{"num": "1", "title": "体液的容量和分布", "paras": [], "subs": [{"title": "（1）体液组成", "paras": [], "points": ["总体液（TBW）约占体重60%。", "细胞内液（ICF）约占体重40%。", "细胞外液（ECF）约占体重20%：  \n   · 组织间液约占15%。  \n   · 血浆约占5%。  \n   · 第三间隙液（跨细胞液，如脑脊液、关节液、消化液等）约占1%。"]}, {"title": "（2）影响体液量的因素", "paras": [], "points": ["脂肪组织含水量仅10%～30%，肌肉组织含水量75%～80%。", "年龄越小，体液占体重比例越大；脂肪越多，体液比例越小。"]}]}]}, {"num": "02", "title": "细胞内、外液的电解质成分有何不同？", "answers": [{"num": "1", "title": "体液的电解质分布", "paras": [], "subs": [{"title": "（1）细胞外液（ECF）主要电解质", "paras": [], "points": ["阳离子：Na+（135～145 mmol/L）。", "阴离子：Cl-、HCO3-。"]}, {"title": "（2）细胞内液（ICF）主要电解质", "paras": [], "points": ["阳离子：K+（3.5～5.5 mmol/L）、Mg2+。", "阴离子：HPO42-、Pr-（蛋白质）。"]}]}]}, {"num": "03", "title": "什么是血浆渗透压？晶体渗透压和胶体渗透压有何区别？", "answers": [{"num": "1", "title": "血浆渗透压", "paras": [], "subs": [{"title": "（1）概念", "paras": [], "points": ["渗透压由溶液中溶质微粒所产生的渗透效应形成，大小取决于溶质微粒数目，与微粒大小无关。", "血浆渗透压正常值为290～310 mOsm/L。"]}, {"title": "（2）血浆晶体渗透压", "paras": [], "points": ["概念：血浆中晶体物质微粒（主要是电解质离子）产生的渗透压。", "特点：占血浆渗透压的绝大部分；晶体物质能自由通过血管膜，但不能自由通过细胞膜。", "生理意义：维持细胞内外水平衡，维持红细胞正常形态和体积。"]}, {"title": "（3）血浆胶体渗透压", "paras": [], "points": ["概念：血浆蛋白质分子产生的渗透压。", "特点：分子量较大、分子个数少，产生的渗透压较低（约1.5 mOsm/L）；不能透过血管膜。", "生理意义：维持血管内外水平衡。"]}]}]}, {"num": "04", "title": "水有哪些生理功能？每日水的出入量是多少？", "answers": [{"num": "1", "title": "水的生理功能", "paras": [], "subs": [{"title": "（1）主要功能", "paras": [], "points": ["促进物质代谢。", "调节体温。", "润滑作用。", "结合水（与蛋白质、核酸等结合）。"]}]}, {"num": "2", "title": "每日水的平衡（约2500 mL/天）", "paras": [], "subs": [{"title": "（1）摄入", "paras": [], "points": ["饮水约1300 mL。", "食物含水约900 mL。", "代谢产水约300 mL。"]}, {"title": "（2）排出", "paras": [], "points": ["尿液约1500 mL。", "呼吸蒸发约350 mL。", "皮肤蒸发约500 mL（不显性出汗）。", "粪便约150 mL。"]}, {"title": "（3）生理需水量", "paras": [], "points": ["每日最低尿量500 mL + 呼吸道失水350 mL + 皮肤不显性蒸发500 mL + 粪便水150 mL = 约1500 mL/天。"]}]}]}, {"num": "05", "title": "水、钠平衡是如何调节的？", "answers": [{"num": "1", "title": "体液调节的神经-体液因素", "paras": [], "subs": [{"title": "（1）渴感调节", "paras": [], "points": ["刺激：ECF渗透压↑（最敏感，1%～2%即可引起）、血容量↓。", "中枢：下丘脑渴中枢。", "效应：饮水→降低渗透压→止渴。"]}, {"title": "（2）抗利尿激素（ADH）", "paras": [], "points": ["来源：下丘脑视上核、室旁核合成。", "刺激：晶体渗透压↑（最敏感）、循环血量↓（最重要，5%～10%）。", "效应：增加肾小管对水的重吸收。"]}, {"title": "（3）醛固酮（ADS）", "paras": [], "points": ["效应：保钠排钾，水伴随钠重吸收增加。"]}, {"title": "（4）心房钠尿肽（ANP）", "paras": [], "points": ["作用：利钠、利尿、扩血管；抑制ADH和醛固酮；舒张入球小动脉、收缩出球小动脉，提高滤过率。"]}]}]}, {"num": "06", "title": "钠平衡有何特点？", "answers": [{"num": "1", "title": "钠的代谢特点", "paras": [], "subs": [{"title": "（1）钠的分布", "paras": [], "points": ["体内钠约40～50 mmol/kg体重。", "约60%可交换，40%不可交换（结合于骨骼）。", "约50%存在于细胞外液，10%存在于细胞内液。"]}, {"title": "（2）钠平衡调节", "paras": [], "points": ["特点：多吃多排，少吃少排，不吃不排。"]}]}]}, {"num": "07", "title": "水钠代谢紊乱如何分类？", "answers": [{"num": "1", "title": "分类", "paras": [], "subs": [{"title": "（1）脱水", "paras": [], "points": ["低渗性脱水（低容量性低钠血症）。", "高渗性脱水（低容量性高钠血症）。", "等渗性脱水。"]}, {"title": "（2）水过多", "paras": [], "points": ["水中毒（高容量性低钠血症）。", "水肿。"]}]}]}, {"num": "08", "title": "什么是高渗性脱水？其原因、机制和临床表现是什么？", "answers": [{"num": "1", "title": "高渗性脱水的概念", "paras": ["又称低容量性高钠血症。特点为：失水大于失钠；血钠浓度>150 mmol/L；血浆渗透压>310 mOsm/L；细胞内、外液量均减少，以细胞内液减少明显。"], "subs": [{"title": "（1）原因和机制", "paras": [], "points": ["水入量不足：进食困难（食道癌）、危重病人给水不足。", "水丢失过多：  \n   · 肾：尿崩症、渗透性利尿。  \n   · 消化道：呕吐、腹泻、高浓度肠内营养。  \n   · 呼吸道：过度通气。  \n   · 皮肤：大量出汗、大面积烧伤暴露疗法。"]}, {"title": "（2）对机体的影响（发病环节）", "paras": [], "points": ["ECF渗透压↑→口渴（渴中枢兴奋）。", "ECF渗透压↑→刺激ADH分泌↑→肾重吸收水↑→尿少、尿比重高。", "ECF高渗→水从细胞内移向细胞外→细胞内脱水（主要脱水部位为ICF）。", "脑细胞脱水→幻觉、躁动，严重时颅内出血。", "血容量↓→脉速、血压↓。", "早期醛固酮分泌受抑制（钠排出增加），晚期醛固酮增多（钠排出减少）。", "脱水热：严重脱水时皮肤蒸发水减少，散热受影响，引起体温上升，常见于小儿。"]}, {"title": "（3）分度", "paras": [], "points": ["轻度（缺水占体重2%～4%）：口渴，其他无明显症状。", "中度（4%～6%）：极度口渴、尿少比重增加、口干舌燥、皮肤弹性差、烦躁不安。", "重度（>6%）：除上述外，出现躁狂、幻觉、谵妄甚至昏迷。"]}, {"title": "（4）治疗原则", "paras": [], "points": ["及时补水（先糖后盐）。", "适当补Na+。", "适当补K+。"]}]}]}, {"num": "09", "title": "什么是低渗性脱水？其原因、机制和临床表现是什么？", "answers": [{"num": "1", "title": "低渗性脱水的概念", "paras": ["又称低容量性低钠血症。特点为：失钠大于失水；血钠浓度<135 mmol/L；血浆渗透压<290 mOsm/L；细胞外液减少。"], "subs": [{"title": "（1）原因和机制", "paras": [], "points": ["肾性失钠：如使用速尿等利尿剂。", "胃肠道丢失：呕吐、腹泻等。", "皮肤丢失：创伤的慢性渗液。", "重要条件：往往是在体液丢失后，只注意补充水而忽略了补钠，故又称慢性或继发性缺水。"]}, {"title": "（2）对机体的影响（发病环节）", "paras": [], "points": ["ECF渗透压↓→无渴感（与高渗性脱水的重要区别）。", "ECF低渗→水移入细胞内→细胞水肿（脑细胞肿胀→淡漠、嗜睡，严重时昏迷）。", "ECF量↓↓（组织间液↓↓最明显）→脱水征（皮肤弹性差、眼窝和婴儿囟门凹陷）。", "早期ADH分泌↓→肾重吸收水↓→尿量可正常、尿比重↓。", "晚期血容量↓↓→ADH分泌↑→尿少。", "血容量↓↓→静脉萎陷、脉速、血压↓、四肢湿冷、直立性眩晕→休克。", "肾血流量↓→醛固酮↑→尿钠↓、尿少、氮质血症。", "对病人的主要威胁：循环衰竭（休克）。"]}, {"title": "（3）分度", "paras": [], "points": ["轻度（血钠<135 mmol/L）：无渴感，疲乏、头晕、手足麻木。", "中度（<130）：恶心呕吐、视力模糊（脑水肿致颅高压）、脉搏细数、血压不稳或下降、浅静脉塌陷、站立性眩晕。", "重度（<120）：神志不清、肌肉痉挛性抽搐、腱反射减弱或消失、木僵甚至昏迷，常发生休克。"]}, {"title": "（4）治疗原则", "paras": [], "points": ["轻、中度补生理盐水（因机体排水量大于排钠量）。", "重度补少量高渗盐水（减轻细胞水肿）。", "动态监测血气，调整输液计划。", "及时处理休克。"]}]}]}, {"num": "10", "title": "什么是等渗性脱水？其原因、机制和临床表现是什么？", "answers": [{"num": "1", "title": "等渗性脱水的概念", "paras": ["又称急性缺水或混合性缺水。特点为：失钠等于失水；血钠浓度135～145 mmol/L；血浆渗透压290～310 mOsm/L。"], "subs": [{"title": "（1）原因和机制", "paras": [], "points": ["短时间内丢失等渗液：  \n   · 胃肠道丢失：大量呕吐、肠外瘘。  \n   · 液体积聚在第三间隙：腹腔或腹膜后感染、肠梗阻。  \n   · 皮肤丢失：大面积烧伤。"]}, {"title": "（2）对机体的影响", "paras": [], "points": ["血浆渗透压和血钠基本正常。", "ECF减少（血容量↓、组织液量↓），ICF变化不明显。", "醛固酮和ADH分泌↑→尿量↓。", "短期内是等渗性；如不及时处理，可因皮肤蒸发、呼吸失水转变为高渗性脱水；如只补水不补钠，可转变为低渗性脱水。"]}, {"title": "（3）分度", "paras": [], "points": ["缺水占体重<4%：厌食、乏力、少尿，但不口渴。", "4%～6%：脱水征（皮肤弹性差、眼窝下陷）+血容量不足（脉搏细数、血压不稳或下降）。", "6%～7%：严重休克表现。"]}, {"title": "（4）治疗原则", "paras": [], "points": ["消除病因。", "补平衡盐溶液或等渗盐水。", "适当补钾。", "如有休克，按休克处理。"]}]}]}, {"num": "11", "title": "什么是水中毒？", "answers": [{"num": "1", "title": "水中毒的概念", "paras": ["又称稀释性低钠血症或高容量性低钠血症。特点为：体液量增多；血钠<130 mmol/L；血浆渗透压<280 mOsm/L。临床相对少见。"], "subs": [{"title": "（1）原因和机制", "paras": [], "points": ["摄入水过多：无盐水灌肠；输入低盐或不含盐液体过多超过肾排水能力。", "水排出减少：急性肾功能障碍排尿能力降低；休克、外伤等导致ADH分泌过多。"]}, {"title": "（2）对机体的影响", "paras": [], "points": ["ECF量↑、ECF渗透压↓、血钠↓、血液稀释。", "水移入细胞→ICF渗透压↓、ICF量↑。", "脑细胞水肿→颅高压→一系列精神神经症状。", "慢性水中毒常被原发病掩盖，表现为软弱无力、恶心、呕吐、嗜睡等。"]}]}]}, {"num": "12", "title": "什么是水肿？如何分类？", "answers": [{"num": "1", "title": "水肿的概念", "paras": ["水肿（edema）是指过多的液体在组织间隙或体腔内积聚。水肿发生在体腔内称为积水（hydrops），如心包积水、胸腔积水。"], "subs": [{"title": "（1）分类", "paras": [], "points": ["按部位：皮下水肿、脑水肿、肺水肿。", "按原因：肾性水肿、肝性水肿、心性水肿、营养不良性水肿、淋巴性水肿、炎性水肿、特发性水肿。", "按范围：全身性水肿（anasarca）、局部性水肿（local edema）。", "按存在状态：凹陷性水肿、隐性水肿。"]}]}]}, {"num": "13", "title": "水肿的发生机制是什么？", "answers": [{"num": "1", "title": "血管内外液体交换失衡（组织液生成大于回流）", "paras": [], "subs": [{"title": "（1）毛细血管流体静压增高", "paras": [], "points": ["静脉回流受阻→毛细血管血压↑→组织液生成↑。"]}, {"title": "（2）血浆胶体渗透压降低", "paras": [], "points": ["血浆蛋白减少（如肾病综合征大量蛋白尿、肝硬化白蛋白合成减少）→有效滤过压↑→组织液生成↑。"]}, {"title": "（3）微血管壁通透性增加", "paras": [], "points": ["炎症、过敏等→血管内皮间隙增大→血浆蛋白滤出→血浆胶体渗透压↓、组织胶体渗透压↑→组织液生成↑。", "漏出液与渗出液的区别：  \n   · 漏出液：非炎症原因，蛋白<25 g/L，比重<1.015，细胞数少，外观清亮。  \n   · 渗出液：炎症原因，蛋白>25 g/L，比重>1.015，细胞数多，外观混浊或血性。"]}, {"title": "（4）淋巴回流障碍", "paras": [], "points": ["淋巴回流受阻（如丝虫病、乳腺癌根治术后）→组织液不能经淋巴回流→水肿。"]}]}, {"num": "2", "title": "体内外液体交换失平衡（钠水潴留）", "paras": [], "subs": [{"title": "（1）球-管失衡的概念", "paras": [], "points": ["正常时肾小球滤出的钠水约99%～99.5%被肾小管重吸收（其中近曲小管重吸收65%～70%），仅0.5%～1%随尿排出。", "球-管失衡是指由于肾小球滤过率减少和/或肾小管重吸收功能增强，以致钠水的排出小于摄入，过多水钠在体内潴留。"]}, {"title": "（2）肾小球滤过率下降", "paras": [], "points": ["原发性：肾小球病变，滤过面积↓（如急性肾小球肾炎）。", "继发性：有效循环血量↓（如心衰、休克）。"]}, {"title": "（3）肾小管重吸收增加", "paras": [], "points": ["近曲小管重吸收↑：滤过分数增加、心房钠尿肽（ANP）减少。", "远曲小管和集合管重吸收↑：醛固酮分泌增加、ADH分泌增加。", "以上均为有效循环血量减少的结果。"]}]}]}, {"num": "14", "title": "常见的全身性水肿有哪些？其机制是什么？", "answers": [{"num": "1", "title": "常见全身性水肿的原因", "paras": [], "subs": [{"title": "（1）心性水肿", "paras": [], "points": ["心脏舒缩功能障碍→心输出量减少、静脉淤血→毛细血管流体静压增高。"]}, {"title": "（2）肾性水肿", "paras": [], "points": ["大量蛋白尿→血浆蛋白经尿丢失→血浆胶体渗透压降低。"]}, {"title": "（3）肝性水肿", "paras": [], "points": ["肝硬化→肝静脉回流受阻+白蛋白合成减少。"]}, {"title": "（4）肺水肿", "paras": [], "points": ["肺动脉血回流受阻、静脉压增高、血管通透性增加。"]}, {"title": "（5）脑水肿", "paras": [], "points": ["血管通透性增加、水中毒。"]}]}]}, {"num": "15", "title": "水肿的防治原则是什么？", "answers": [{"num": "1", "title": "水肿的治疗", "paras": [], "subs": [{"title": "（1）治疗原则", "paras": [], "points": ["治疗原发病。", "补充白蛋白（提高血浆胶体渗透压）。", "适当限制钠、水摄入。", "促进钠、水排出（利尿剂）。"]}]}]}]}]}]);
+// Deep freeze each book/chapter/kp/answer/sub so notes can never mutate source
+(function deepFreeze(o){
+  if(o && typeof o==='object' && !Object.isFrozen(o)){
+    Object.freeze(o);
+    Object.values(o).forEach(deepFreeze);
+  }
+})(DATA);
+let isBlankMode = false;
+let customWordList = []; // will be populated from userData.blankKeywords after store init
+let densityLevel = 2;
+
+/* ===== unified user data store: userData = { notes: {}, blankKeywords: [] } ===== */
+const USERDATA_KEY = 'pathophys_userdata_v1';
+let userData = { notes: {}, blankKeywords: [] };
+try {
+  const raw = localStorage.getItem(USERDATA_KEY);
+  if(raw){
+    const parsed = JSON.parse(raw);
+    if(parsed && typeof parsed === 'object'){
+      userData.notes = (parsed.notes && typeof parsed.notes === 'object') ? parsed.notes : {};
+      userData.blankKeywords = Array.isArray(parsed.blankKeywords) ? parsed.blankKeywords.filter(w=>typeof w==='string'&&w.trim()) : [];
+    }
+  }
+} catch(e) { userData = { notes: {}, blankKeywords: [] }; }
+// backward-compat alias
+const userNotes = userData.notes;
+function saveNotes(){ saveUserData(); }
+function saveUserData(){
+  try { localStorage.setItem(USERDATA_KEY, JSON.stringify(userData)); } catch(e){}
+}
+// sync runtime list from persisted store
+customWordList = userData.blankKeywords.slice();
+
+function numToCn(n){
+  const cn=['零','一','二','三','四','五','六','七','八','九','十'];
+  if(n<=10) return cn[n];
+  if(n<20) return '十'+cn[n-10];
+  return String(n);
+}
+
+/* ===== Auto-detection patterns by confidence level ===== */
+/* Level 1: always blank (numbers, specific named stages, key mediators) */
+/* Level 2: medium (classifications, key phenomena, hormones) */
+/* Level 3: loose (broader mechanism terms) */
+
+const AUTO_PATTERNS = {
+  /* Level 1 紧凑：必背数字 + 唯一结论词 + 核心分期（选择题/名词解释必挖） */
+  1: [
+    /* 数字考点 */
+    /\d+\.?\d*\s*~\s*\d+\.?\d*\s*℃/g,
+    /\d+\.?\d*\s*~\s*\d+\.?\d*\s*%/g,
+    /\d+\.?\d*\s*℃/g,
+    /\d+\.?\d*\s*%/g,
+    /\d+\s*~\s*\d+\s*(?:分钟|小时|天|日|周|月)/g,
+    /\d+\s*(?:分钟|小时|天|日|周|月|年)/g,
+    /\d+\.?\d*\s*mmol\/L/g,
+    /\d+\.?\d*\s*mmol/g,
+    /\d+\.?\d*\s*mmHg/g,
+    /\d+\.?\d*\s*kPa/g,
+    /\d+\.?\d*\s*g\/L/g,
+    /\d+\.?\d*\s*mg\/dL/g,
+    /* 核心介质/信号分子（必考） */
+    /TNF-?[αa]?/g, /IL-?\d+/g, /PGE2?/g, /PGI2?/g, /TXA2?/g,
+    /cAMP/g, /cGMP/g, /ATP/g, /ADP/g, /NO/g, /ET-?\d?/g, /PAF/g,
+    /CRH/g, /AVP/g, /α-MSH/g, /HSP\d*/g,
+    /* 休克三期（唯一正确分型） */
+    /微循环缺血期|微循环淤血期|微循环衰竭期/g,
+    /缺血性缺氧期|淤血性缺氧期/g,
+    /* 发热三期 */
+    /体温上升期|高温持续期|体温下降期/g,
+    /* DIC三期 */
+    /高凝期|消耗性低凝期|继发性纤溶亢进期/g,
+    /* GAS三期 */
+    /警觉期|抵抗期|衰竭期/g,
+    /* 代偿/失代偿 */
+    /代偿期|失代偿期|不可逆期/g,
+  ],
+  /* Level 2 中等：疾病分型 + 关键病理现象 + 激素 + 临床体征（简答题得分点） */
+  2: [
+    /* 缺氧四型 */
+    /低张性缺氧|血液性缺氧|循环性缺氧|组织性缺氧/g,
+    /* 脱水三型 */
+    /高渗性脱水|低渗性脱水|等渗性脱水/g,
+    /* 钾代谢紊乱 */
+    /低钾血症|高钾血症/g,
+    /* 酸碱紊乱四型 */
+    /代谢性酸中毒|呼吸性酸中毒|代谢性碱中毒|呼吸性碱中毒/g,
+    /* 特征性病理现象 */
+    /应激性溃疡/g, /休克肾/g, /休克肺/g, /心肌抑制因子/g,
+    /裂体细胞/g, /微血管病性溶血性贫血/g,
+    /弥散性血管内凝血/g, /内毒素血症/g,
+    /肠源性紫绀/g, /发绀/g, /紫绀/g,
+    /水中毒/g, /水肿/g,
+    /反常性酸性尿|反常性碱性尿/g,
+    /脱水热/g, /周期性麻痹/g,
+    /* 关键激素/调节因子 */
+    /醛固酮/g, /抗利尿激素/g, /心房钠尿肽/g,
+    /血管紧张素Ⅱ?/g, /糖皮质激素/g, /盐皮质激素/g,
+    /甲状腺素/g, /儿茶酚胺/g, /肾素/g,
+    /缓激肽/g, /组胺/g, /5-羟色胺/g,
+    /* 关键结构/屏障 */
+    /血脑屏障/g, /血-脑屏障/g,
+    /钠-钾ATP酶|Na\+?-K\+?ATP酶/g,
+    /视前区下丘脑前部|POAH/g,
+    /* 中毒类型 */
+    /一氧化碳中毒|氰化物中毒|亚硝酸盐中毒/g,
+    /* 热型 */
+    /稽留热|弛张热|间歇热/g,
+    /* 发热核心概念 */
+    /发热激活物|内生致热原|热限|热惊厥/g,
+    /* 血氧指标 */
+    /动脉血氧分压|血氧容量|血氧含量|血氧饱和度/g,
+    /动-静脉血氧含量差/g,
+  ],
+  /* Level 3 宽松：机制名称 + 检测指标 + 通路 +  broader概念（名词解释挖空） */
+  3: [
+    /* 应激轴 */
+    /全身适应综合征/g, /HPA轴|下丘脑-垂体-肾上腺皮质轴/g,
+    /蓝斑-交感-肾上腺髓质轴/g, /交感-肾上腺髓质系统/g,
+    /急性期蛋白/g, /分子伴娘/g,
+    /* 发热机制 */
+    /体温调定点/g, /恒温热窗/g, /中枢发热介质/g, /负调节介质/g,
+    /白细胞致热原/g, /干扰素/g,
+    /* 缺氧机制 */
+    /2,3-二磷酸甘油酸|2,3-DPG/g, /氧离曲线/g,
+    /低氧通气反应/g, /高原肺水肿/g, /高铁血红蛋白/g,
+    /氧化磷酸化/g, /呼吸爆发/g, /黄嘌呤氧化酶/g,
+    /* 休克机制 */
+    /有效循环血量/g, /自身输血|自身输液/g,
+    /心脏指数/g, /中心静脉压/g, /心输出量/g, /外周阻力/g,
+    /肾素-血管紧张素-醛固酮系统|RAAS/g,
+    /MODS|SIRS/g,
+    /* DIC指标 */
+    /微血栓/g, /D-二聚体|3P试验/g,
+    /血小板减少|纤维蛋白原减少|凝血酶原时间延长/g,
+    /* 水平衡 */
+    /细胞外液|细胞内液/g,
+    /晶体渗透压|胶体渗透压|血浆渗透压/g,
+    /阴离子间隙|标准碳酸氢盐|实际碳酸氢盐|缓冲碱|碱剩余/g,
+    /AG|SB|AB|BB|BE/g,
+    /酸碱平衡/g, /酸碱失衡/g,
+    /* 通用病理 */
+    /负反馈|正反馈/g,
+    /少尿|无尿|多尿/g,
+    /全身炎症反应/g, /代偿性抗炎反应/g,
+    /组织灌注/g, /微循环/g,
+  ]
+};
+
+/* ===== Blanking engine ===== */
+function escapeHtml(s){
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* Find all ranges [start,end) that should be blanked in a text string.
+   Custom words first, then auto patterns by density level. */
+function findBlankRanges(text){
+  let ranges = []; // {start, end, word}
+  const used = new Set(); // character indices already covered
+
+  function addRange(start, end, word){
+    // check overlap with existing ranges
+    for(let i=start;i<end;i++){
+      if(used.has(i)) return false;
+    }
+    for(let i=start;i<end;i++) used.add(i);
+    ranges.push({start, end, word});
+    return true;
+  }
+
+  // 1. Custom words (highest priority)
+  customWordList.forEach(word => {
+    if(!word || word.length < 1) return;
+    let idx = 0;
+    while(true){
+      const found = text.indexOf(word, idx);
+      if(found === -1) break;
+      addRange(found, found + word.length, word);
+      idx = found + word.length;
+    }
+  });
+
+  // 2. Auto patterns up to densityLevel
+  for(let level=1; level<=densityLevel; level++){
+    const patterns = AUTO_PATTERNS[level] || [];
+    patterns.forEach(pat => {
+      pat.lastIndex = 0; // reset regex
+      let m;
+      while((m = pat.exec(text)) !== null){
+        addRange(m.index, m.index + m[0].length, m[0]);
+        if(m.index === pat.lastIndex) pat.lastIndex++;
+      }
+    });
+  }
+
+  // Sort ranges by start position
+  ranges.sort((a,b) => a.start - b.start);
+  return ranges;
+}
+
+/* Given plain text, return HTML string with blank spans */
+function applyBlanks(text){
+  if(!text) return '';
+  // Handle multi-line (split by \n, add <br>)
+  const lines = text.split('\n');
+  let htmlParts = [];
+  lines.forEach((line, li) => {
+    if(li > 0) htmlParts.push('<br>');
+    if(!line.trim()) return;
+
+    if(!isBlankMode){
+      htmlParts.push(escapeHtml(line));
+      return;
+    }
+
+    const ranges = findBlankRanges(line);
+    if(ranges.length === 0){
+      htmlParts.push(escapeHtml(line));
+      return;
+    }
+
+    let pos = 0;
+    ranges.forEach(r => {
+      if(r.start > pos) htmlParts.push(escapeHtml(line.substring(pos, r.start)));
+      htmlParts.push('<span class="blank" data-word="'+escapeHtml(r.word)+'">'+escapeHtml(r.word)+'</span>');
+      pos = r.end;
+    });
+    if(pos < line.length) htmlParts.push(escapeHtml(line.substring(pos)));
+  });
+  return htmlParts.join('');
+}
+
+/* ===== Build sidebar ===== */
+const tree = document.getElementById('sidebarTree');
+let totalCh=0, totalKp=0;
+DATA.forEach(b=>totalCh+=b.chapters.length);
+DATA.forEach(b=>b.chapters.forEach(ch=>totalKp+=ch.kps.length));
+document.getElementById('statBook').textContent = DATA.length+' 个科目';
+document.getElementById('statCh').textContent = totalCh+' 章';
+document.getElementById('statKp').textContent = totalKp+' 个知识点';
+
+DATA.forEach((book,bi)=>{
+  const bn=document.createElement('div');bn.className='book-node';
+  const bt=document.createElement('div');bt.className='book-title';
+  bt.innerHTML='<span class="arrow">▼</span> '+escapeHtml(book.title);
+  bn.appendChild(bt);
+  const cl=document.createElement('div');cl.className='chapter-list';
+  book.chapters.forEach((ch,ci)=>{
+    const row=document.createElement('div');row.className='chapter-row';
+    const cn=document.createElement('div');cn.className='chapter-name';cn.textContent=ch.title;
+    const tg=document.createElement('div');tg.className='ch-toggle';tg.textContent='－';
+    const kpl=document.createElement('div');kpl.className='kp-list open';
+    ch.kps.forEach((kp,ki)=>{
+      const it=document.createElement('div');it.className='kp-item';
+      it.innerHTML='<span class="kp-num">'+kp.num+'</span>'+escapeHtml(kp.title);
+      it.dataset.bi=bi;it.dataset.ci=ci;it.dataset.ki=ki;
+      it.addEventListener('click',()=>{goToKp(bi,ci,ki);closeSidebar();});
+      kpl.appendChild(it);
+    });
+    row.appendChild(cn);row.appendChild(tg);cl.appendChild(row);cl.appendChild(kpl);
+    cn.addEventListener('click',()=>{goToChapter(bi,ci);closeSidebar();});
+    tg.addEventListener('click',(e)=>{
+      e.stopPropagation();kpl.classList.toggle('open');
+      tg.textContent=kpl.classList.contains('open')?'－':'＋';
+    });
+  });
+  bn.appendChild(cl);
+  bt.addEventListener('click',()=>{
+    bt.classList.toggle('collapsed');
+    cl.style.display=bt.classList.contains('collapsed')?'none':'block';
+  });
+  tree.appendChild(bn);
+});
+
+/* ===== Render chapter ===== */
+const contentWrap=document.getElementById('contentWrap');
+const posLabel=document.getElementById('posLabel');
+let curBi=0,curCi=0;
+
+function renderChapter(bi,ci){
+  try {
+  const book=DATA[bi], ch=book.chapters[ci];
+  let html='';
+  html+='<div class="chapter-header">';
+  html+='<div class="book-crumb">'+escapeHtml(book.title)+'</div>';
+  html+='<h2>'+escapeHtml(ch.title)+'</h2>';
+  html+='<span class="kp-count">本章 '+ch.kps.length+' 个知识点</span>';
+  html+='</div>';
+  ch.kps.forEach((kp,ki)=>{
+    html+='<div class="kp" id="kp-'+bi+'-'+ci+'-'+ki+'">';
+    html+='<div class="kp-title"><span class="kp-num">'+kp.num+'</span>'+escapeHtml(kp.title)+'</div>';
+    kp.answers.forEach((ans,ai)=>{
+      html+='<div class="answer">';
+      // answer title: add unique ID for note selection
+      html+='<div class="answer-title" data-ans-id="ans-'+bi+'-'+ci+'-'+ki+'-'+ai+'"><span class="a-num">'+ans.num+'.</span>'+applyBlanks(ans.title)+'</div>';
+      (ans.paras||[]).forEach(p=>{html+='<p>'+applyBlanks(p)+'</p>';});
+      if(ans.direct_points){
+        html+='<ul class="direct-points">';
+        ans.direct_points.forEach((pt,idx)=>{
+          html+='<li data-n="'+(idx+1)+'">'+applyBlanks(pt)+'</li>';
+        });
+        html+='</ul>';
+      }
+      (ans.subs||[]).forEach(sub=>{
+        html+='<div class="sub">';
+        html+='<div class="sub-title">'+applyBlanks(sub.title)+'</div>';
+        (sub.paras||[]).forEach(p=>{html+='<p>'+applyBlanks(p)+'</p>';});
+        if(sub.points&&sub.points.length){
+          html+='<ul class="points">';
+          sub.points.forEach((pt,idx)=>{
+            html+='<li data-n="'+(idx+1)+'">'+applyBlanks(pt)+'</li>';
+          });
+          html+='</ul>';
+        }
+        html+='</div>';
+      });
+      // user-added notes for this answer
+      const kpKey='kp-'+bi+'-'+ci+'-'+ki;
+      const userNotesForKp=userNotes[kpKey]||[];
+      const existingSubCount=(ans.subs||[]).length;
+      let noteSubNum=existingSubCount;
+      userNotesForKp.forEach(note=>{
+        if(note.answerIdx!==ai) return;
+        noteSubNum++;
+        html+='<div class="sub user-note">';
+        html+='<div class="sub-title">（'+numToCn(noteSubNum)+'）'+applyBlanks(note.title)+'<span class="note-tag">补</span></div>';
+        if(note.points&&note.points.length){
+          html+='<ul class="points">';
+          note.points.forEach((pt,idx)=>{
+            html+='<li data-n="'+(idx+1)+'">'+applyBlanks(pt)+'</li>';
+          });
+          html+='</ul>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    });
+    html+='</div>';
+  });
+  contentWrap.innerHTML=html;
+  curBi=bi;curCi=ci;
+  document.querySelectorAll('.chapter-name').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.kp-item').forEach(el=>el.classList.remove('active'));
+  const activeCh=document.querySelector('.chapter-name[data-bi="'+bi+'"][data-ci="'+ci+'"]');
+  if(activeCh)activeCh.classList.add('active');
+  posLabel.textContent=book.title+' · '+ch.title;
+  document.getElementById('prevCh').disabled=(bi===0&&ci===0);
+  let totalChapters=0;DATA.forEach(b=>totalChapters+=b.chapters.length);
+  let flatIdx=0;
+  for(let b=0;b<DATA.length;b++){
+    for(let c=0;c<DATA[b].chapters.length;c++){
+      if(b===bi&&c===ci)break;flatIdx++;
+    }
+    if(b===bi)break;
+  }
+  document.getElementById('nextCh').disabled=(flatIdx>=totalChapters-1);
+  bindBlankClicks();
+  window.scrollTo({top:0,behavior:'instant'});
+  window.location.hash='ch-'+bi+'-'+ci;
+  } catch(err){
+    console.error('渲染失败:',err);
+    contentWrap.innerHTML='<div style="padding:40px;text-align:center;color:#999;"><p>本章节渲染出现异常：'+esc(err.message)+'</p><p style="font-size:13px;margin-top:8px;">请刷新页面重试，或检查补充笔记数据。</p></div>';
+  }
+}
+
+function bindBlankClicks(){
+  contentWrap.querySelectorAll('.blank').forEach(el=>{
+    el.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(!isBlankMode)return;
+      el.classList.toggle('revealed');
+    });
+  });
+}
+
+function goToChapter(bi,ci){renderChapter(bi,ci);}
+function goToKp(bi,ci,ki){
+  if(bi!==curBi||ci!==curCi){
+    renderChapter(bi,ci);setTimeout(()=>highlightKp(bi,ci,ki),50);
+  } else highlightKp(bi,ci,ki);
+}
+function highlightKp(bi,ci,ki){
+  const el=document.getElementById('kp-'+bi+'-'+ci+'-'+ki);
+  if(!el)return;
+  el.scrollIntoView({behavior:'smooth',block:'start'});
+  el.classList.remove('highlight');void el.offsetWidth;el.classList.add('highlight');
+  document.querySelectorAll('.kp-item').forEach(e=>e.classList.remove('active'));
+  const sideEl=document.querySelector('.kp-item[data-bi="'+bi+'"][data-ci="'+ci+'"][data-ki="'+ki+'"]');
+  if(sideEl)sideEl.classList.add('active');
+  window.location.hash='kp-'+bi+'-'+ci+'-'+ki;
+}
+
+/* ===== Mode toggle ===== */
+const modeBtn=document.getElementById('modeBtn');
+const settingsBtn=document.getElementById('settingsBtn');
+modeBtn.addEventListener('click',()=>{
+  isBlankMode=!isBlankMode;
+  if(isBlankMode){
+    document.body.classList.remove('orig-mode');
+    modeBtn.textContent='原文版';modeBtn.classList.add('active');
+    settingsBtn.style.display='';
+  } else {
+    document.body.classList.add('orig-mode');
+    modeBtn.textContent='挖空版';modeBtn.classList.remove('active');
+    settingsBtn.style.display='none';
+  }
+  renderChapter(curBi,curCi); // re-render to apply/remove blanks
+});
+
+/* ===== Settings ===== */
+const settingsMask=document.getElementById('settingsMask');
+settingsBtn.addEventListener('click',()=>{
+  document.getElementById('customWords').value='';
+  document.getElementById('densitySlider').value=densityLevel;
+  updateDensityLabel();
+  renderSavedKeywords();
+  settingsMask.classList.add('show');
+});
+function updateDensityLabel(){
+  const v=+document.getElementById('densitySlider').value;
+  document.getElementById('densityVal').textContent=v===1?'紧凑':(v===2?'中等':'宽松');
+}
+document.getElementById('densitySlider').addEventListener('input',updateDensityLabel);
+
+function renderSavedKeywords(){
+  const box=document.getElementById('savedKeywords');
+  if(!box) return;
+  if(userData.blankKeywords.length===0){
+    box.innerHTML='<span style="color:var(--text-light);font-size:12px;">暂无已保存的挖空考点</span>';
+    return;
+  }
+  box.innerHTML=userData.blankKeywords.map((w,i)=>
+    '<span style="display:inline-block;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:2px 8px;margin:2px;font-size:12px;">'+
+    escapeHtml(w)+'<span data-del="'+i+'" style="margin-left:5px;cursor:pointer;color:#c0392b;font-weight:bold;" title="删除">×</span></span>'
+  ).join('');
+  box.querySelectorAll('[data-del]').forEach(el=>{
+    el.addEventListener('click',()=>{
+      const idx=+el.dataset.del;
+      userData.blankKeywords.splice(idx,1);
+      customWordList=userData.blankKeywords.slice();
+      saveUserData();
+      renderSavedKeywords();
+      renderChapter(curBi,curCi);
+    });
+  });
+}
+
+document.getElementById('applySettingsBtn').addEventListener('click',()=>{
+  // incremental append: new words from textarea merge into existing, dedup
+  const newWords=document.getElementById('customWords').value
+    .split('\n').map(w=>w.trim()).filter(w=>w.length>0);
+  let added=0;
+  newWords.forEach(w=>{
+    if(!userData.blankKeywords.includes(w)){
+      userData.blankKeywords.push(w);
+      added++;
+    }
+  });
+  customWordList=userData.blankKeywords.slice();
+  densityLevel=+document.getElementById('densitySlider').value;
+  saveUserData();
+  settingsMask.classList.remove('show');
+  renderChapter(curBi,curCi);
+});
+document.getElementById('showAllBtn').addEventListener('click',()=>{
+  contentWrap.querySelectorAll('.blank').forEach(el=>el.classList.add('revealed'));
+});
+document.getElementById('hideAllBtn').addEventListener('click',()=>{
+  contentWrap.querySelectorAll('.blank').forEach(el=>el.classList.remove('revealed'));
+});
+
+/* ===== prev/next ===== */
+document.getElementById('prevCh').addEventListener('click',()=>{
+  let bi=curBi,ci=curCi-1;
+  if(ci<0){bi=curBi-1;if(bi<0)return;ci=DATA[bi].chapters.length-1;}
+  renderChapter(bi,ci);
+});
+document.getElementById('nextCh').addEventListener('click',()=>{
+  let bi=curBi,ci=curCi+1;
+  if(ci>=DATA[bi].chapters.length){bi=curBi+1;if(bi>=DATA.length)return;ci=0;}
+  renderChapter(bi,ci);
+});
+
+/* ===== scroll spy ===== */
+window.addEventListener('scroll',()=>{
+  const h=document.documentElement;
+  const pct=(h.scrollTop/(h.scrollHeight-h.clientHeight))*100;
+  document.getElementById('progressFill').style.width=pct+'%';
+  const kps=contentWrap.querySelectorAll('.kp');
+  if(!kps.length)return;
+  let current=-1;
+  kps.forEach((el,idx)=>{if(el.getBoundingClientRect().top<120)current=idx;});
+  if(current>=0){
+    document.querySelectorAll('.kp-item').forEach(e=>e.classList.remove('active'));
+    const sideEl=document.querySelector('.kp-item[data-bi="'+curBi+'"][data-ci="'+curCi+'"][data-ki="'+current+'"]');
+    if(sideEl)sideEl.classList.add('active');
+  }
+});
+
+/* ===== mobile sidebar ===== */
+const sidebar=document.getElementById('sidebar');
+document.getElementById('menuBtn').addEventListener('click',()=>sidebar.classList.toggle('open'));
+function closeSidebar(){sidebar.classList.remove('open');}
+
+/* ===== info modal ===== */
+document.getElementById('infoBtn').addEventListener('click',()=>document.getElementById('modalMask').classList.add('show'));
+document.getElementById('modalClose').addEventListener('click',()=>document.getElementById('modalMask').classList.remove('show'));
+document.getElementById('modalMask').addEventListener('click',(e)=>{if(e.target===e.currentTarget)e.currentTarget.classList.remove('show');});
+settingsMask.addEventListener('click',(e)=>{if(e.target===e.currentTarget)settingsMask.classList.remove('show');});
+
+/* ===== note panel (floating, background stays interactive) ===== */
+const notePanel=document.getElementById('notePanel');
+const noteBtn=document.getElementById('noteBtn');
+const noteInput=document.getElementById('noteInput');
+const noteAnswerSelect=document.getElementById('noteAnswerSelect');
+const notePreview=document.getElementById('notePreview');
+const noteConfirmBtn=document.getElementById('noteConfirmBtn');
+let selectedAnsId=null; // "ans-bi-ci-ki-ai"
+
+noteBtn.addEventListener('click',()=>{
+  openNotePanel();
+});
+
+function openNotePanel(){
+  // build grouped dropdown: all answers in current chapter, grouped by KP
+  const ch=DATA[curBi].chapters[curCi];
+  noteAnswerSelect.innerHTML='';
+  const defaultOpt=document.createElement('option');
+  defaultOpt.value='';defaultOpt.textContent='— 请选择插入位置 —';
+  noteAnswerSelect.appendChild(defaultOpt);
+  ch.kps.forEach((kp,ki)=>{
+    const og=document.createElement('optgroup');
+    og.label=kp.num+' '+kp.title;
+    kp.answers.forEach((ans,ai)=>{
+      const opt=document.createElement('option');
+      opt.value='ans-'+curBi+'-'+curCi+'-'+ki+'-'+ai;
+      opt.textContent='  '+ans.num+'. '+(ans.title.length>24?ans.title.substring(0,24)+'…':ans.title);
+      og.appendChild(opt);
+    });
+    noteAnswerSelect.appendChild(og);
+  });
+  // pre-select currently visible answer title
+  const visible=getVisibleAnswerTitle();
+  if(visible){
+    selectAnswer(visible.dataset.ansId);
+  } else {
+    setSelectedAns(null);
+  }
+  noteInput.value='';
+  updateNotePreview();
+  notePanel.style.display='block';
+  document.body.classList.add('note-selecting');
+}
+
+function closeNotePanel(){
+  notePanel.style.display='none';
+  document.body.classList.remove('note-selecting');
+  clearAnswerHighlight();
+  setSelectedAns(null);
+  // reset sub-panels
+  exportPanel.style.display='none';
+  importPanel.style.display='none';
+  importResult.textContent='';
+}
+
+function getVisibleAnswerTitle(){
+  const titles=contentWrap.querySelectorAll('.answer-title');
+  let best=null,bestDist=9999;
+  titles.forEach(el=>{
+    const r=el.getBoundingClientRect();
+    // find the one closest to top of viewport but not above it
+    if(r.top>=52 && r.top<bestDist){bestDist=r.top;best=el;}
+  });
+  if(!best){
+    // fallback: first one visible
+    titles.forEach(el=>{
+      const r=el.getBoundingClientRect();
+      if(r.top<window.innerHeight && r.bottom>52 && (!best||r.top<best.getBoundingClientRect().top)) best=el;
+    });
+  }
+  return best;
+}
+
+function clearAnswerHighlight(){
+  contentWrap.querySelectorAll('.answer-title.note-selected').forEach(el=>el.classList.remove('note-selected'));
+}
+
+function setSelectedAns(ansId){
+  selectedAnsId=ansId;
+  noteAnswerSelect.value=ansId||'';
+  noteConfirmBtn.disabled=!ansId;
+  clearAnswerHighlight();
+  if(ansId){
+    const el=contentWrap.querySelector('[data-ans-id="'+ansId+'"]');
+    if(el) el.classList.add('note-selected');
+  }
+  updateNotePreview();
+}
+
+function selectAnswer(ansId){
+  setSelectedAns(ansId);
+  // scroll to it
+  const el=contentWrap.querySelector('[data-ans-id="'+ansId+'"]');
+  if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// click on answer title in page (only when note-selecting mode active)
+contentWrap.addEventListener('click',(e)=>{
+  if(!document.body.classList.contains('note-selecting')) return;
+  const t=e.target.closest('.answer-title');
+  if(t){
+    e.preventDefault();e.stopPropagation();
+    const id=t.dataset.ansId;
+    if(selectedAnsId===id){
+      // toggle off
+      setSelectedAns(null);
+    } else {
+      setSelectedAns(id);
+    }
+  }
+});
+
+// dropdown change
+noteAnswerSelect.addEventListener('change',()=>{
+  const v=noteAnswerSelect.value;
+  if(v) selectAnswer(v);
+  else setSelectedAns(null);
+});
+
+function updateNotePreview(){
+  const val=noteInput.value.trim();
+  if(!selectedAnsId){
+    notePreview.textContent='请先选择插入位置';
+    return;
+  }
+  if(!val){
+    notePreview.textContent='输入笔记内容后这里预览';
+    return;
+  }
+  const parts=selectedAnsId.split('-'); // ans-bi-ci-ki-ai
+  const ki=+parts[3], ai=+parts[4];
+  const kp=DATA[curBi].chapters[curCi].kps[ki];
+  const kpKey='kp-'+curBi+'-'+curCi+'-'+ki;
+  const existingSubs=(kp.answers[ai].subs||[]).length;
+  const existingNotes=(userNotes[kpKey]||[]).filter(n=>n.answerIdx===ai).length;
+  const subNum=existingSubs+existingNotes+1;
+  const lines=val.split('\n').filter(l=>l.trim());
+  const title=lines[0].trim();
+  const pts=lines.slice(1).filter(l=>l.trim().startsWith('-')).map(l=>l.trim().substring(1).trim());
+  let prev='将插入为（'+numToCn(subNum)+'）'+title;
+  pts.forEach((p,i)=>{prev+='\n  '+(i+1)+'. '+p;});
+  notePreview.textContent=prev;
+}
+
+noteInput.addEventListener('input',updateNotePreview);
+
+document.getElementById('noteCancelBtn').addEventListener('click',closeNotePanel);
+document.getElementById('noteCloseX').addEventListener('click',closeNotePanel);
+
+/* ===== export / import full userData package ===== */
+const exportPanel=document.getElementById('exportPanel');
+const importPanel=document.getElementById('importPanel');
+const exportText=document.getElementById('exportText');
+const importText=document.getElementById('importText');
+const importResult=document.getElementById('importResult');
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  importPanel.style.display='none';
+  importResult.textContent='';
+  const isOpen=exportPanel.style.display!=='none';
+  exportPanel.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    const payload={app:'pathophys_study',version:1,exported_at:new Date().toISOString(),data:userData};
+    exportText.value=JSON.stringify(payload,null,2);
+  }
+});
+
+document.getElementById('copyExportBtn').addEventListener('click',()=>{
+  exportText.select();
+  try{
+    document.execCommand('copy');
+    document.getElementById('copyExportBtn').textContent='已复制✓';
+    setTimeout(()=>{document.getElementById('copyExportBtn').textContent='一键复制';},1500);
+  }catch(e){ exportText.focus(); }
+});
+
+document.getElementById('importBtn').addEventListener('click',()=>{
+  exportPanel.style.display='none';
+  const isOpen=importPanel.style.display!=='none';
+  importPanel.style.display=isOpen?'none':'block';
+  importResult.textContent='';
+});
+
+document.getElementById('doImportBtn').addEventListener('click',()=>{
+  const raw=importText.value.trim();
+  if(!raw){importResult.textContent='请先粘贴JSON';importResult.style.color='#c0392b';return;}
+  let pkg;
+  try{ pkg=JSON.parse(raw); }
+  catch(e){ importResult.textContent='JSON格式错误，无法导入';importResult.style.color='#c0392b';return; }
+
+  // accept both wrapped ({data:{...}}) and raw userData
+  const incoming=(pkg&&pkg.data&&typeof pkg.data==='object')?pkg.data:pkg;
+  if(!incoming||typeof incoming!=='object'||Array.isArray(incoming)){
+    importResult.textContent='数据格式不对，请确认是导出的备份文件';importResult.style.color='#c0392b';return;
+  }
+
+  let notesAdded=0, wordsAdded=0;
+  try{
+    // --- merge notes module ---
+    if(incoming.notes&&typeof incoming.notes==='object'&&!Array.isArray(incoming.notes)){
+      Object.keys(incoming.notes).forEach(kpKey=>{
+        const arr=incoming.notes[kpKey];
+        if(!Array.isArray(arr))return;
+        if(!userData.notes[kpKey]) userData.notes[kpKey]=[];
+        arr.forEach(note=>{
+          if(note&&typeof note==='object'&&typeof note.title==='string'&&Array.isArray(note.points)){
+            userData.notes[kpKey].push({answerIdx:note.answerIdx||0,title:note.title,points:note.points});
+            notesAdded++;
+          }
+        });
+      });
+    }
+    // --- merge blankKeywords module (dedupe) ---
+    if(Array.isArray(incoming.blankKeywords)){
+      incoming.blankKeywords.forEach(w=>{
+        if(typeof w==='string'&&w.trim()&&!userData.blankKeywords.includes(w.trim())){
+          userData.blankKeywords.push(w.trim());
+          wordsAdded++;
+        }
+      });
+    }
+    // future modules: add merge logic here automatically
+    saveUserData();
+    customWordList=userData.blankKeywords.slice();
+    importResult.textContent='导入完成：笔记+'+notesAdded+'条，挖空词+'+wordsAdded+'个';
+    importResult.style.color='var(--primary-dark)';
+    importText.value='';
+    setTimeout(()=>renderChapter(curBi,curCi),600);
+  }catch(e){
+    importResult.textContent='导入出错：'+e.message;
+    importResult.style.color='#c0392b';
+  }
+});
+
+noteConfirmBtn.addEventListener('click',()=>{
+  if(!selectedAnsId) return;
+  const val=noteInput.value.trim();
+  if(!val) return;
+  const parts=selectedAnsId.split('-');
+  const ki=+parts[3], ai=+parts[4];
+  // validate: target must exist in frozen DATA
+  try {
+    const targetKp=DATA[curBi].chapters[curCi].kps[ki];
+    if(!targetKp||!targetKp.answers||!targetKp.answers[ai]){
+      alert('插入位置无效，请重新选择');return;
+    }
+  } catch(e){ alert('插入位置无效');return; }
+  const kpKey='kp-'+curBi+'-'+curCi+'-'+ki;
+  const lines=val.split('\n').filter(l=>l.trim());
+  const title=lines[0].trim();
+  if(!title){alert('请输入笔记小标题');return;}
+  const points=lines.slice(1).filter(l=>l.trim().startsWith('-')).map(l=>l.trim().substring(1).trim());
+  // notes live in a separate array, only push — never mutate frozen DATA
+  if(!userNotes[kpKey]) userNotes[kpKey]=[];
+  userNotes[kpKey].push(Object.freeze({answerIdx:ai, title:title, points:Object.freeze(points)}));
+  saveNotes();
+  closeNotePanel();
+  renderChapter(curBi,curCi);
+});
+
+/* ===== LZW compression + base64url encoding ===== */
+function lzEncode(input){
+  if(!input) return '';
+  var dict={}, data=[], curr=input[0]||'', dictSize=256;
+  for(var i=0;i<256;i++) dict[String.fromCharCode(i)]=i;
+  for(var i=1;i<input.length;i++){
+    var c=input[i];
+    if(dict[curr+c]!==undefined){ curr+=c; }
+    else{
+      data.push(dict[curr]);
+      dict[curr+c]=dictSize++;
+      curr=c;
+    }
+  }
+  if(curr) data.push(dict[curr]);
+  // pack numbers to base64url
+  return b64url.encode(data);
+}
+function lzDecode(encoded){
+  var nums=b64url.decode(encoded);
+  if(!nums||!nums.length) return '';
+  var dict={}, size=256;
+  for(var i=0;i<256;i++) dict[i]=String.fromCharCode(i);
+  var curr=dict[nums[0]], result=[curr];
+  for(var i=1;i<nums.length;i++){
+    var code=nums[i];
+    var entry;
+    if(dict[code]!==undefined) entry=dict[code];
+    else if(code===size) entry=curr+curr[0];
+    else return '';
+    result.push(entry);
+    dict[size++]=curr+entry[0];
+    curr=entry;
+  }
+  return result.join('');
+}
+var b64url={
+  encode:function(nums){
+    // pack array of numbers (up to ~65535) into base64url string
+    var bytes=[];
+    nums.forEach(function(n){
+      bytes.push(n>>8&255); bytes.push(n&255);
+    });
+    var bin='';
+    for(var i=0;i<bytes.length;i++) bin+=String.fromCharCode(bytes[i]);
+    return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+  },
+  decode:function(str){
+    try{
+      str=str.replace(/-/g,'+').replace(/_/g,'/');
+      while(str.length%4) str+='=';
+      var bin=atob(str);
+      var nums=[];
+      for(var i=0;i<bin.length;i+=2){
+        nums.push(bin.charCodeAt(i)*256+bin.charCodeAt(i+1));
+      }
+      return nums;
+    }catch(e){ return null; }
+  }
+};
+
+/* ===== Compact QR Code Generator (byte mode, EC level L, v1-10) ===== */
+var QR=(function(){
+  var EXP=[],LOG=[];
+  (function(){
+    for(var i=0;i<8;i++)EXP[i]=1<<i;
+    for(var i=8;i<256;i++)EXP[i]=EXP[i-4]^EXP[i-5]^EXP[i-6]^EXP[i-8];
+    for(var i=0;i<256;i++)LOG[EXP[i]]=i;
+    for(var i=256;i<512;i++)EXP[i]=EXP[i-256];
+  })();
+  function mul(a,b){return a===0||b===0?0:EXP[LOG[a]+LOG[b]];}
+  function rsGen(deg){
+    var g=[1];
+    for(var i=0;i<deg;i++){
+      var ng=new Array(g.length+1).fill(0);
+      for(var j=0;j<g.length;j++){ng[j]^=g[j];ng[j+1]^=mul(g[j],EXP[i]);}
+      g=ng;
+    }
+    return g;
+  }
+  function rsEnc(data,gen){
+    var res=new Array(gen.length-1).fill(0);
+    for(var i=0;i<data.length;i++){
+      var f=data[i]^res[0];
+      res.shift();res.push(0);
+      for(var j=0;j<gen.length-1;j++)res[j]^=mul(gen[j+1],f);
+    }
+    return res;
+  }
+  // version table: [total_codewords, ec_per_block, num_blocks_group1, data_per_block_g1, num_blocks_g2, data_per_block_g2]
+  // EC level L
+  var VT=[
+    null,[26,7,1,19,0,0],[44,10,1,34,0,0],[70,15,1,55,0,0],
+    [100,20,1,80,0,0],[134,26,1,108,0,0],[172,18,2,68,0,0],
+    [196,20,2,78,0,0],[242,24,2,97,0,0],[292,30,2,116,0,0],
+    [346,18,2,68,2,69]
+  ];
+  var AP_POS=[null,[],[6,18],[6,22],[6,24],[6,26],[6,28],[6,30],[6,32],[6,34],[6,36]];
+
+  function buildMatrix(ver){
+    var n=17+ver*4;
+    var m=[];
+    for(var i=0;i<n;i++){m.push(new Array(n).fill(null));}
+    // finder patterns
+    function finder(r,c){
+      for(var i=-1;i<=7;i++)for(var j=-1;j<=7;j++){
+        var rr=r+i,cc=c+j;
+        if(rr<0||rr>=n||cc<0||cc>=n)continue;
+        var inr=rr-r,inc=cc-c;
+        var dark=(inr>=0&&inr<=6&&inc>=0&&inc<=6&&(inr===0||inr===6||inc===0||inc===6||(inr>=2&&inr<=4&&inc>=2&&inc<=4)));
+        m[rr][cc]=dark?1:0;
+        if(dark||(inr>0&&inr<6&&inc>0&&inc<6))m[rr][cc]=dark?1:0;
+      }
+    }
+    // simpler: draw 7x7 finder at corners
+    function drawFinder(r,c){
+      for(var i=0;i<7;i++)for(var j=0;j<7;j++){
+        var dark=(i===0||i===6||j===0||j===6||(i>=2&&i<=4&&j>=2&&j<=4));
+        m[r+i][c+j]=dark?1:0;
+      }
+      // separator
+      for(var i=-1;i<=7;i++)for(var j=-1;j<=7;j++){
+        var rr=r+i,cc=c+j;
+        if(rr<0||rr>=n||cc<0||cc>=n)continue;
+        if(m[rr][cc]===null)m[rr][cc]=0;
+      }
+    }
+    drawFinder(0,0);drawFinder(0,n-7);drawFinder(n-7,0);
+    // timing patterns
+    for(var i=8;i<n-8;i++){
+      if(m[6][i]===null)m[6][i]=(i%2===0)?1:0;
+      if(m[i][6]===null)m[i][6]=(i%2===0)?1:0;
+    }
+    // alignment patterns
+    var aps=AP_POS[ver]||[];
+    if(aps.length>=2){
+      for(var ai=0;ai<aps.length;ai++)for(var aj=0;aj<aps.length;aj++){
+        var r=aps[ai],c=aps[aj];
+        // skip corners where finders are
+        if((r<8&&c<8)||(r<8&&c>n-9)||(r>n-9&&c<8))continue;
+        for(var i=-2;i<=2;i++)for(var j=-2;j<=2;j++){
+          var dark=(i===0&&j===0||Math.abs(i)===2||Math.abs(j)===2);
+          m[r+i][c+j]=dark?1:0;
+        }
+      }
+    }
+    // dark module
+    m[n-8][8]=1;
+    return m;
+  }
+
+  function formatBits(mask,n){
+    // EC level L = 01b, mask 0-7
+    var ec=1; // L
+    var data=(ec<<3)|mask;
+    var bch=data<<10;
+    var g=1335; // 10100110111
+    var d=bch;
+    for(var i=14;i>=10;i--){if(d&(1<<i))d^=g<<(i-10);}
+    var bits=((data<<10)|d)^0x5412; // 101010000010010
+    return bits;
+  }
+
+  function placeFormat(m,n,mask){
+    var bits=formatBits(mask,n);
+    for(var i=0;i<15;i++){
+      var bit=(bits>>i)&1;
+      // around top-left finder
+      var r,c;
+      if(i<6){r=i;c=8;}
+      else if(i<8){r=i+1;c=8;}
+      else if(i<9){r=7;c=i;}
+      else{r=14-i;c=8;}
+      if(m[r][c]===null)m[r][c]=bit;
+      // around other finders
+      if(i<8){m[8][n-1-i]=bit;}
+      else{m[n-15+i][8]=bit;}
+    }
+    m[n-8][8]=1; // dark module already set
+  }
+
+  function generate(text){
+    var bytes=[];
+    for(var i=0;i<text.length;i++)bytes.push(text.charCodeAt(i)&255);
+    // find version
+    var ver=0;
+    for(var v=1;v<=10;v++){
+      var info=VT[v];
+      var dataCap=(info[2]*info[3]+(info[4]?info[4]*info[5]:0));
+      // byte mode: 4 bits mode + 8/16 bits length + data
+      var lenBits=v<10?8:16;
+      var needed=4+lenBits+bytes.length*8;
+      if(needed<=dataCap*8){ver=v;break;}
+    }
+    if(!ver)return null;
+    var info=VT[ver];
+    var dataCap=info[2]*info[3]+(info[4]?info[4]*info[5]:0);
+    // encode data bits
+    var bits=[];
+    // mode: byte = 0100
+    bits.push(0,1,0,0);
+    // length
+    var lenBits=ver<10?8:16;
+    for(var i=lenBits-1;i>=0;i--)bits.push((bytes.length>>i)&1);
+    // data
+    bytes.forEach(function(b){for(var i=7;i>=0;i--)bits.push((b>>i)&1);});
+    // terminator
+    while(bits.length<dataCap*8&&bits.length<dataCap*8)bits.push(0);
+    // pad bytes
+    var padBytes=[0xEC,0x11];
+    var bi=0;
+    while(bits.length<dataCap*8){
+      bits.push((padBytes[bi%2]>>7)&1);bi++;
+      // simpler: append full bytes
+    }
+    // rebuild as bytes
+    var dataBytes=[];
+    for(var i=0;i<dataCap;i++){
+      var b=0;
+      for(var j=0;j<8;j++){b=(b<<1)|(bits[i*8+j]||0);}
+      dataBytes.push(b);
+    }
+    // block division
+    var blocks=[];
+    var ecGen=rsGen(info[1]);
+    // group 1
+    for(var b=0;b<info[2];b++){
+      var blk=dataBytes.slice(b*info[3],(b+1)*info[3]);
+      blocks.push({data:blk,ec:rsEnc(blk,ecGen)});
+    }
+    // group 2
+    if(info[4]){
+      var offset=info[2]*info[3];
+      for(var b=0;b<info[4];b++){
+        var blk=dataBytes.slice(offset+b*info[5],offset+(b+1)*info[5]);
+        blocks.push({data:blk,ec:rsEnc(blk,ecGen)});
+      }
+    }
+    // interleave
+    var codewords=[];
+    var maxD=Math.max.apply(null,blocks.map(function(b){return b.data.length;}));
+    var maxE=blocks[0].ec.length;
+    for(var i=0;i<maxD;i++){
+      blocks.forEach(function(b){if(i<b.data.length)codewords.push(b.data[i]);});
+    }
+    for(var i=0;i<maxE;i++){
+      blocks.forEach(function(b){codewords.push(b.ec[i]);});
+    }
+    // build matrix
+    var n=17+ver*4;
+    var m=buildMatrix(ver);
+    // place data in zigzag
+    var bi=0;
+    var upward=true;
+    for(var col=n-1;col>=0;col-=2){
+      if(col===6)col--; // skip timing column
+      for(var i=0;i<n;i++){
+        var r=upward?n-1-i:i;
+        for(var c=col;c>=col-1;c--){
+          if(m[r][c]!==null)continue;
+          var bit=0;
+          if(bi<codewords.length*8)bit=(codewords[bi>>3]>>(7-(bi&7)))&1;
+          m[r][c]=bit?1:0;
+          bi++;
+        }
+      }
+      upward=!upward;
+    }
+    // try masks, pick best (simplified: mask 0)
+    var mask=0;
+    // apply mask pattern 0: (r+c)%2==0
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++){
+      if(m[r][c]!==null&&!(r<9&&c<9)&&!(r<9&&c>n-9)&&!(r>n-9&&c<9)){
+        if((r+c)%2===0)m[r][c]^=1;
+      }
+    }
+    placeFormat(m,n,mask);
+    return {matrix:m,size:n};
+  }
+
+  function draw(text,canvas){
+    var qr=generate(text);
+    if(!qr)return false;
+    var ctx=canvas.getContext('2d');
+    var n=qr.size;
+    var cell=Math.floor(canvas.width/n);
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='#000';
+    for(var r=0;r<n;r++)for(var c=0;c<n;c++){
+      if(qr.matrix[r][c])ctx.fillRect(c*cell,r*cell,cell,cell);
+    }
+    return true;
+  }
+  return {draw:draw};
+})();
+
+/* ===== QR sync logic ===== */
+const qrBtn=document.getElementById('qrBtn');
+const qrPanel=document.getElementById('qrPanel');
+const qrCanvas=document.getElementById('qrCanvas');
+const qrLink=document.getElementById('qrLink');
+const qrWarn=document.getElementById('qrWarn');
+
+qrBtn.addEventListener('click',()=>{
+  exportPanel.style.display='none';importPanel.style.display='none';
+  const isOpen=qrPanel.style.display!=='none';
+  qrPanel.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    try{
+      var json=JSON.stringify(userData);
+      var compressed=lzEncode(json);
+      var base=location.href.split('?')[0].split('#')[0];
+      var url=base+'?sync='+compressed;
+      qrLink.value=url;
+      qrWarn.style.display=compressed.length>1800?'block':'none';
+      QR.draw(compressed,qrCanvas);
+    }catch(e){
+      qrWarn.textContent='生成失败：'+e.message;
+      qrWarn.style.display='block';
+    }
+  }
+});
+
+document.getElementById('copyQrLinkBtn').addEventListener('click',()=>{
+  qrLink.select();
+  try{
+    document.execCommand('copy');
+    document.getElementById('copyQrLinkBtn').textContent='已复制✓';
+    setTimeout(()=>{document.getElementById('copyQrLinkBtn').textContent='复制链接';},1500);
+  }catch(e){qrLink.focus();}
+});
+
+/* ===== auto-merge from ?sync= on page load ===== */
+(function(){
+  try{
+    var params=new URLSearchParams(location.search);
+    var sync=params.get('sync');
+    if(!sync)return;
+    var json=lzDecode(sync);
+    if(!json)return;
+    var incoming=JSON.parse(json);
+    if(!incoming||typeof incoming!=='object')return;
+    var notesAdded=0,wordsAdded=0;
+    if(incoming.notes&&typeof incoming.notes==='object'){
+      Object.keys(incoming.notes).forEach(function(k){
+        if(!Array.isArray(incoming.notes[k]))return;
+        if(!userData.notes[k])userData.notes[k]=[];
+        incoming.notes[k].forEach(function(n){
+          if(n&&typeof n.title==='string'&&Array.isArray(n.points)){
+            userData.notes[k].push({answerIdx:n.answerIdx||0,title:n.title,points:n.points});
+            notesAdded++;
+          }
+        });
+      });
+    }
+    if(Array.isArray(incoming.blankKeywords)){
+      incoming.blankKeywords.forEach(function(w){
+        if(typeof w==='string'&&w.trim()&&!userData.blankKeywords.includes(w.trim())){
+          userData.blankKeywords.push(w.trim());wordsAdded++;
+        }
+      });
+    }
+    saveUserData();
+    customWordList=userData.blankKeywords.slice();
+    // clean URL
+    history.replaceState(null,'',location.pathname+location.hash);
+    // show toast after page loads
+    window.addEventListener('load',function(){
+      setTimeout(function(){
+        alert('同步完成：笔记新增'+notesAdded+'条，挖空词新增'+wordsAdded+'个');
+      },500);
+    });
+  }catch(e){
+    console.warn('sync import failed:',e);
+  }
+})();
+
+/* ===== init ===== */
+function initFromHash(){
+  const h=location.hash;
+  let m=h.match(/kp-(\d+)-(\d+)-(\d+)/);
+  if(m){goToKp(+m[1],+m[2],+m[3]);return;}
+  m=h.match(/ch-(\d+)-(\d+)/);
+  if(m){renderChapter(+m[1],+m[2]);return;}
+  renderChapter(0,0);
+}
+initFromHash();
+</script>
+</body>
+</html>
